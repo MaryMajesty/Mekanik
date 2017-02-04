@@ -1,0 +1,261 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5B625B88-043E-4AC0-A9A7-D47052F7F14D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Mekanik</RootNamespace>
+    <AssemblyName>Mekanik</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FarseerPhysics, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\DLLs\Farseer Physics Engine 3.5\bin\Debug\FarseerPhysics.dll</HintPath>
+    </Reference>
+    <Reference Include="Meka">
+      <HintPath>..\..\..\Visual Studio 2015\Meka\Meka\bin\Debug\Meka.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Speech" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Zero, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Zero\bin\Debug\Zero.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Editors\AnimationEditor.cs" />
+    <Compile Include="Editors\AreasetEditor.cs" />
+    <Compile Include="Editors\LevelEditor\Attributes\EventAttribute.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\EntityTile.cs" />
+    <Compile Include="Editors\LevelEditor\TabLeft\LevelInfoEditor.cs" />
+    <Compile Include="Editors\LevelEditor\TabLeft\LevelPropertiesEditor.cs" />
+    <Compile Include="Editors\LevelEditor\ScrollBackground.cs" />
+    <Compile Include="Graphics\RectangleRounded.cs" />
+    <Compile Include="Interface\Alignable.cs" />
+    <Compile Include="Interface\Alignment.cs" />
+    <Compile Include="Interface\Button.cs" />
+    <Compile Include="Interface\Inputs\ArrayEditor.cs" />
+    <Compile Include="Interface\Inputs\InputControl.cs" />
+    <Compile Include="Interface\Inputs\NumBox.cs" />
+    <Compile Include="Interface\Inputs\PropertyEditor.cs" />
+    <Compile Include="Interface\Inputs\PropertyReflector.cs" />
+    <Compile Include="Interface\Inputs\PropertySaver.cs" />
+    <Compile Include="Interface\Inputs\ScriptBox.cs" />
+    <Compile Include="Interface\Logo.cs" />
+    <Compile Include="Interface\TextSelectPattern.cs" />
+    <Compile Include="System\GameBase.cs" />
+    <Compile Include="System\Input\GamePadStick.cs" />
+    <Compile Include="System\Input\GamePadTrigger.cs" />
+    <Compile Include="System\Audio\Sound.cs" />
+    <Compile Include="System\Audio\SoundSource.cs" />
+    <Compile Include="WIP\GifEncoder.cs" />
+    <Compile Include="System\Input\GamePad.cs" />
+    <Compile Include="WIP\InputKind.cs" />
+    <Compile Include="WIP\InputStorage.cs" />
+    <Compile Include="System\Levels\Decoration.cs" />
+    <Compile Include="System\Levels\Areaset.cs" />
+    <Compile Include="Editors\LevelEditor\Attributes\EditableAttribute.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\EntityEditor.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\EntityGroup.cs" />
+    <Compile Include="Editors\LevelEditor\EntityIcon.cs" />
+    <Compile Include="Editors\LevelEditor\EntityInstance.cs" />
+    <Compile Include="Editors\LevelEditor\EntityProperty.cs" />
+    <Compile Include="Editors\LevelEditor\EntityPropertyInstance.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\EntitySelector.cs" />
+    <Compile Include="Editors\LevelEditor\EntityType.cs" />
+    <Compile Include="Editors\LevelEditor\Attributes\GroupAttribute.cs" />
+    <Compile Include="Editors\LevelEditor\Attributes\IconAttribute.cs" />
+    <Compile Include="Editors\LevelEditor\Layer.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\LayerList.cs" />
+    <Compile Include="Editors\LevelEditor\LevelEditor.cs" />
+    <Compile Include="Editors\LevelEditor\LevelPreview.cs" />
+    <Compile Include="Editors\LevelEditor\Attributes\OriginAttribute.cs" />
+    <Compile Include="Editors\LevelEditor\TileEditor.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\TileGroup.cs" />
+    <Compile Include="Editors\LevelEditor\TabRight\TileSelector.cs" />
+    <Compile Include="Graphics\PixelFont.cs" />
+    <Compile Include="WIP\PixelText.cs" />
+    <Compile Include="Interface\CollapseGroup.cs" />
+    <Compile Include="Interface\ColorPattern.cs" />
+    <Compile Include="Interface\ColorTheme.cs" />
+    <Compile Include="Interface\Scrollbar.cs" />
+    <Compile Include="Misc\WeightedBunch.cs" />
+    <Compile Include="WIP\Input.cs" />
+    <Compile Include="WIP\Inputs.cs" />
+    <Compile Include="System\Levels\LayerSource.cs" />
+    <Compile Include="WIP\Level.cs" />
+    <Compile Include="System\Levels\LevelBase.cs" />
+    <Compile Include="System\Levels\LevelBank.cs" />
+    <Compile Include="System\Levels\LevelConnection.cs" />
+    <Compile Include="System\Levels\LevelSource.cs" />
+    <Compile Include="System\Graphics\Renderer.cs" />
+    <Compile Include="WIP\Liquid.cs" />
+    <Compile Include="System\Levels\Region.cs" />
+    <Compile Include="System\Levels\RegionBase.cs" />
+    <Compile Include="System\MekanikalError.cs" />
+    <Compile Include="System\Physics\OverlapArea.cs" />
+    <Compile Include="System\Platform.cs" />
+    <Compile Include="System\Saves\Achievement.cs" />
+    <Compile Include="System\Saves\SavableAttribute.cs" />
+    <Compile Include="System\Saves\SaveFile.cs" />
+    <Compile Include="System\Saves\SavedEntity.cs" />
+    <Compile Include="System\Math\Direction.cs" />
+    <Compile Include="WIP\ContextMenu.cs" />
+    <Compile Include="Interface\DragList.cs" />
+    <Compile Include="Interface\FileMenu.cs" />
+    <Compile Include="Interface\RichText.cs" />
+    <Compile Include="Interface\Selectable.cs" />
+    <Compile Include="Interface\TabList.cs" />
+    <Compile Include="WIP\AI.cs" />
+    <Compile Include="WIP\Connection.cs" />
+    <Compile Include="WIP\DropData.cs" />
+    <Compile Include="System\Input\Analog.cs" />
+    <Compile Include="Graphics\Animation.cs" />
+    <Compile Include="Graphics\AnimationLibrary.cs" />
+    <Compile Include="Graphics\AnimationSource.cs" />
+    <Compile Include="Misc\Beth.cs" />
+    <Compile Include="Misc\Bezier.cs" />
+    <Compile Include="Misc\Bunch.cs" />
+    <Compile Include="WIP\Button.cs" />
+    <Compile Include="Interface\Inputs\Checkbox.cs" />
+    <Compile Include="WIP\KeyInfo.cs" />
+    <Compile Include="Editors\LevelEditor\Attributes\LockAttribute.cs" />
+    <Compile Include="WIP\MekaComp.cs" />
+    <Compile Include="System\Network\Client.cs" />
+    <Compile Include="WIP\ControlButton.cs" />
+    <Compile Include="Graphics\Circle.cs" />
+    <Compile Include="Misc\Code.cs" />
+    <Compile Include="System\Physics\Collider.cs" />
+    <Compile Include="WIP\Controls.cs" />
+    <Compile Include="Misc\ByteGenerator.cs" />
+    <Compile Include="Misc\FrameCurve.cs" />
+    <Compile Include="WIP\Gif.cs" />
+    <Compile Include="WIP\GifSource.cs" />
+    <Compile Include="System\Graphics\BlendMode.cs" />
+    <Compile Include="WIP\Keymap.cs" />
+    <Compile Include="WIP\KeySync.cs" />
+    <Compile Include="Interface\Label.cs" />
+    <Compile Include="Interface\LoadingCircle.cs" />
+    <Compile Include="WIP\Debug.cs" />
+    <Compile Include="System\Physics\MouseArea.cs" />
+    <Compile Include="Graphics\NineSlice.cs" />
+    <Compile Include="System\Network\Node.cs" />
+    <Compile Include="Interface\Inputs\TextBox.cs" />
+    <Compile Include="WIP\PhotoCanvas.cs" />
+    <Compile Include="Interface\Inputs\SelectList.cs" />
+    <Compile Include="System\Network\Server.cs" />
+    <Compile Include="Interface\Slider.cs" />
+    <Compile Include="Interface\Inputs\TextBased.cs" />
+    <Compile Include="Interface\Inputs\TextEditor.cs" />
+    <Compile Include="System\Network\User.cs" />
+    <Compile Include="System\Graphics\VertexGraphic.cs" />
+    <Compile Include="System\Graphics\ScaleMode.cs" />
+    <Compile Include="Graphics\Sizable.cs" />
+    <Compile Include="System\Graphics\Color.cs" />
+    <Compile Include="System\Entity.cs" />
+    <Compile Include="Misc\Extensions.cs" />
+    <Compile Include="IO\File.cs" />
+    <Compile Include="WIP\FileTypes.cs" />
+    <Compile Include="Graphics\FontBase.cs" />
+    <Compile Include="WIP\FragmentShader.cs" />
+    <Compile Include="WIP\Game.cs" />
+    <Compile Include="System\Graphics\Graphic.cs" />
+    <Compile Include="Graphics\Image.cs" />
+    <Compile Include="System\Graphics\ImageSource.cs" />
+    <Compile Include="WIP\Sound\Music.cs" />
+    <Compile Include="System\Input\Key.cs" />
+    <Compile Include="Misc\Line.cs" />
+    <Compile Include="System\Math\Meth.cs" />
+    <Compile Include="Misc\Misc.cs" />
+    <Compile Include="System\Math\Point.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\Math\Rect.cs" />
+    <Compile Include="Graphics\Rectangle.cs" />
+    <Compile Include="Graphics\Ring.cs" />
+    <Compile Include="Misc\Sandbox.cs" />
+    <Compile Include="System\Graphics\Shader.cs" />
+    <Compile Include="WIP\Sound\Sound.cs" />
+    <Compile Include="WIP\Sound\SoundSource.cs" />
+    <Compile Include="Graphics\Text.cs" />
+    <Compile Include="System\Math\Vector.cs" />
+    <Compile Include="System\Graphics\Vertex.cs" />
+    <Compile Include="System\Graphics\VertexArray.cs" />
+    <Compile Include="System\Graphics\VertexArrayType.cs" />
+    <Compile Include="WIP\VertexShader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="To Do.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="OpenTK.dll.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
