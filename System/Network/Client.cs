@@ -109,8 +109,8 @@ namespace Mekanik
 									this.Server._Latencies.RemoveAt(0);
 							}
 						}
-						else if (data.Name == "Key")
-							this._Game._PressKey(data["Name"].Content, data["ID"].To<int>(), data["Pressed"].To<bool>(), false, false);
+						//else if (data.Name == "Key")
+						//	this._Game._PressKey(data["Name"].Content, data["ID"].To<int>(), data["Pressed"].To<bool>(), false, false);
 
 						//this._Game.Title = this.Server._ByteReader._Bytes.Count.ToString();
 						//}

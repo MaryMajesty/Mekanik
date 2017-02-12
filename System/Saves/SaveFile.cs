@@ -18,10 +18,10 @@ namespace Mekanik
 		public int PlayTime;
 		public Bunch<MekaItem> CustomInfo = new Bunch<MekaItem>();
 
-		internal string _PositionLevel;
-		public string PositionLevel
+		internal string _PositionRegion;
+		public string PositionRegion
 		{
-			get { return this._PositionLevel; }
+			get { return this._PositionRegion; }
 		}
 		internal string _PositionEntrance;
 		public string PositionEntrance
@@ -43,9 +43,12 @@ namespace Mekanik
 			MekaItem file = MekaItem.LoadFromFile(_path);
 
 			this.PlayTime = file["Play Time"].Content.To<int>();
-			this.LastPlayed = file["Last Played"].Content.To<DateTime>();
+			
+			int[] ds = file["Last Played"].Content.Split('.').ToArray().Select(item => item.To<int>()).ToArray();
+			this.LastPlayed = new DateTime(ds[2], ds[1], ds[0]);
 
-			this.CustomInfo = file["Custom Info"];
+			this._PositionRegion = file["Position Region"].Content;
+			this._PositionEntrance = file["Position Entrance"].Content;
 
 			foreach (MekaItem level in file["Levels"].Children)
 			{
@@ -57,12 +60,14 @@ namespace Mekanik
 			foreach (MekaItem achievement in file["Achievements"].Children)
 				this.Achievements[achievement.Name] = achievement.Children[0];
 
+			this.CustomInfo = file["Custom Info"];
+
 			string n = File.GetName(_path);
 			n = n.Substring(n.IndexOf('#') + 1);
 			this._Id = n.To<int>();
 		}
 
-		internal void _SaveLevel(LevelBase _level, string _name)
+		internal void _SaveLevel(Level _level, string _name)
 		{
 			Bunch<SavedEntity> ss = new Bunch<SavedEntity>();
 
@@ -83,8 +88,10 @@ namespace Mekanik
 			MekaItem file = new MekaItem("Save File #" + this._Id.ToString(), new Bunch<MekaItem>());
 
 			file.Children.Add(new MekaItem("Play Time", this.PlayTime.ToString()));
-			file.Children.Add(new MekaItem("Last Played", DateTime.Now.ToString()));
-			file.Children.Add(new MekaItem("Custom Info", this.CustomInfo));
+			file.Children.Add(new MekaItem("Last Played", DateTime.Now.Day.ToString() + "." + DateTime.Now.Month.ToString() + "." + DateTime.Now.Year.ToString()));
+
+			file.Children.Add(new MekaItem("Position Region", this.PositionRegion));
+			file.Children.Add(new MekaItem("Position Entrance", this.PositionEntrance));
 
 			MekaItem levels = new MekaItem("Levels", new List<MekaItem>());
 			foreach (KeyValuePair<string, Bunch<SavedEntity>> level in this._Levels)
@@ -101,7 +108,14 @@ namespace Mekanik
 				achievements.Children.Add(new MekaItem(achievement.Key, new List<MekaItem>() { achievement.Value }));
 			file.Children.Add(achievements);
 
+			file.Children.Add(new MekaItem("Custom Info", this.CustomInfo));
+
 			file.SaveToFile(path);
+		}
+
+		internal void _Delete()
+		{
+			File.Delete(this._Game.Path + "\\Internal\\Saves\\Save File #" + this._Id.ToString() + ".meka");
 		}
 	}
 }

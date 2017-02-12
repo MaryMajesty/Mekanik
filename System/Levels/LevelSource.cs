@@ -9,10 +9,9 @@ using Zero;
 
 namespace Mekanik
 {
-	public class LevelSource
+	public class LevelSource : ILoadable
 	{
 		public List<MekaItem> _Properties;
-		//public object Info;
 		public Bunch<LayerSource> Layers = new Bunch<LayerSource>();
 		public LayerSource MainLayer;
 		public Bunch<ImageSource> LayerImages = new Bunch<ImageSource>();
@@ -22,21 +21,23 @@ namespace Mekanik
 		public string Title;
 		public string Author;
 		public Point Size;
-		//public double RenderTime;
 		public double CollisionTime;
 		public Bunch<Entity> Entities = new Bunch<Entity>();
 		internal int _MainLayerZ;
 		public Script OnLoad;
 		public Script OnEnter;
 		public Script OnExit;
+		private int _CurrentLayer;
+		private int _CurrentCollisionLayer;
+		private Point _CurrentTile;
+		private Renderer _CurrentRenderer;
 
-		private bool _Loaded;
-		public bool Loaded
+		public bool FinishedLoading
 		{
-			get { return this._Loaded; }
+			get { return this._CurrentLayer == this.Layers.Count; }
 		}
-		
-		public LevelSource(MekaItem _item, GameBase _game)
+
+		public LevelSource(GameBase _game, MekaItem _item, bool _delayload = false)
 		{
 			this._Game = _game;
 
@@ -88,13 +89,89 @@ namespace Mekanik
 				z++;
 			}
 			z = 0;
+
+			if (!_delayload)
+			{
+				while (!this.FinishedLoading)
+					this.LoadStep();
+			}
 		}
 
-		public LevelSource(string _path, GameBase _game) : this(MekaItem.LoadFromFile(_path), _game) { }
+		public void LoadStep()
+		{
+			LayerSource l = this.Layers[this._CurrentLayer];
 
-		//public void StepLoad()
-		//{
+			if (this._CurrentRenderer == null)
+				this._CurrentRenderer = new Renderer(this.Size * this._Game.TileSize);
+			
+			if (this._Game.Areasets[l.Tiles[this._CurrentTile.X, this._CurrentTile.Y].Item1].Cols[l.Tiles[this._CurrentTile.X, this._CurrentTile.Y].Item2].Any(item => item) == (this._CurrentCollisionLayer == 1))
+				this._CurrentRenderer.Draw(new Image(this._Game.Areasets[l.Tiles[this._CurrentTile.X, this._CurrentTile.Y].Item1].Tiles[l.Tiles[this._CurrentTile.X, this._CurrentTile.Y].Item2]) { BlendMode = BlendMode.None, Position = this._CurrentTile * this._Game.TileSize });
 
-		//}
+			this._CurrentTile.X++;
+			if (this._CurrentTile.X == this.Size.X)
+			{
+				this._CurrentTile.X = 0;
+				this._CurrentTile.Y++;
+				if (this._CurrentTile.Y == this.Size.Y)
+				{
+					this._CurrentTile.Y = 0;
+					this._CurrentCollisionLayer++;
+
+					this.LayerImages.Add(this._CurrentRenderer.ImageSource);
+					this._CurrentRenderer.DisposeWithoutImage();
+					this._CurrentRenderer = null;
+
+					if (this._CurrentCollisionLayer == 2)
+					{
+						this._CurrentCollisionLayer = 0;
+						this._CurrentLayer++;
+					}
+				}
+			}
+		}
+
+		public LevelSource(GameBase _game, string _path, bool _delayload = false) : this(_game, MekaItem.LoadFromFile(_path)) { }
+
+		public void Save(string _path)
+		{
+			Bunch<string> _areasets = new Bunch<string>();
+
+			foreach (LayerSource l in this.Layers)
+			{
+				foreach (string areaset in l._GetAreasets())
+				{
+					if (!_areasets.Contains(areaset))
+						_areasets.Add(areaset);
+				}
+			}
+
+			MekaItem file = new MekaItem("File", new List<MekaItem>());
+
+			MekaItem info = new MekaItem("Info", new List<MekaItem>());
+			info.Children.Add(new MekaItem("Title", this.Title));
+			info.Children.Add(new MekaItem("Author", this.Author));
+			info.Children.Add(new MekaItem("Width", this.Size.X.ToString()));
+			info.Children.Add(new MekaItem("Height", this.Size.Y.ToString()));
+			info.Children.Add(new MekaItem("OnLoad", this.OnLoad.SourceCode));
+			info.Children.Add(new MekaItem("OnEnter", this.OnEnter.SourceCode));
+			info.Children.Add(new MekaItem("OnExit", this.OnEnter.SourceCode));
+			file.Children.Add(info);
+
+			file.Children.Add(new MekaItem("Properties", this._Properties));
+
+			file.Children.Add(new MekaItem("Areasets", _areasets.Select(item => new MekaItem("Areaset", item))));
+
+			MekaItem layers = new MekaItem("Layers", new List<MekaItem>());
+			foreach (LayerSource l in this.Layers)
+			{
+				MekaItem item = l._Export(_areasets);
+				if (this.MainLayer == l)
+					item.Children.Add(new MekaItem("Main"));
+				layers.Children.Add(item);
+			}
+			file.Children.Add(layers);
+
+			file.SaveToFile(_path);
+		}
 	}
 }

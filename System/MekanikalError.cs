@@ -10,6 +10,7 @@ namespace Mekanik
 	{
 		public string Type;
 		public bool Fatal;
+		public string Stack;
 		private string _Source;
 
 		public string Source
@@ -22,6 +23,7 @@ namespace Mekanik
 		{
 			this.Type = _type;
 			this.Fatal = _fatal;
+			this.Stack = this.StackTrace;
 		}
 
 		public MekanikalError(Exception _error)
@@ -30,6 +32,7 @@ namespace Mekanik
 			this.Type = "Unknown";
 			this.Fatal = true;
 			this._Source = _error.StackTrace;
+			this.Stack = _error.StackTrace;
 		}
 	}
 }

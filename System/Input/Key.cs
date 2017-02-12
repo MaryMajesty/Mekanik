@@ -353,7 +353,24 @@ namespace Mekanik
 		MouseDown,
 		MouseUp,
 		MouseForward,
-		MouseBackward
+		MouseBackward,
+
+		Separator,
+
+		GamePadA,
+		GamePadB,
+		GamePadX,
+		GamePadY,
+		GamePadStart,
+		GamePadSelect,
+		GamePadLeft,
+		GamePadRight,
+		GamePadUp,
+		GamePadDown,
+		GamePadLeftShoulder,
+		GamePadRightShoulder,
+		GamePadLeftStick,
+		GamePadRightStick
 	}
 
 	//public enum Key

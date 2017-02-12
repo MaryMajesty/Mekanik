@@ -13,6 +13,7 @@ namespace Mekanik
 		public Bunch<ImageSource> Tiles = new Bunch<ImageSource>();
 		public Bunch<bool[,]> Cols = new Bunch<bool[,]>();
 		public Dictionary<string, ImageSource> Decorations = new Dictionary<string, ImageSource>();
+		public Point Size;
 
 		public Areaset(MekaItem _file, Point _tilesize, Point _tilecollisionresolution)
 		{
@@ -23,11 +24,13 @@ namespace Mekanik
 			ImageSource[,] tiles = tileset.Split(tileset.Size / _tilesize);
 			ImageSource colset = GameBase.LoadImageSource(_file["Colset"].Data);
 
-			int pixelcount = Meth.Up(_tilecollisionresolution.X * _tilecollisionresolution.Y / 4);
+			int pixelcount = Meth.Up(_tilecollisionresolution.X * _tilecollisionresolution.Y / 4.0);
 
-			for (int y = 0; y < tiles.GetLength(1); y++)
+			this.Size = new Point(tiles.GetLength(0), tiles.GetLength(1));
+
+			for (int y = 0; y < this.Size.Y; y++)
 			{
-				for (int x = 0; x < tiles.GetLength(0); x++)
+				for (int x = 0; x < this.Size.X; x++)
 				{
 					this.Tiles.Add(tiles[x, y]);
 

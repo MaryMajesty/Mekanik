@@ -178,8 +178,8 @@ namespace Mekanik
 
 							this._Game._ClientConnects.Add(p);
 						}
-						else if (data.Name == "Key")
-							this._Game._PressKey(data["Name"].Content, data["ID"].To<int>(), data["Pressed"].To<bool>(), false, false);
+						//else if (data.Name == "Key")
+						//	this._Game._PressKey(data["Name"].Content, data["ID"].To<int>(), data["Pressed"].To<bool>(), false, false);
 
 						Thread.Sleep(1);
 					}
