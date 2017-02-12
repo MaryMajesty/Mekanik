@@ -47,7 +47,7 @@ namespace Mekanik
 			this._TextBox.Content = this._Value.ToString("D" + this.Digits.ToString());
 		}
 
-		private void _ApplyText() => this._ChangeValue(int.Parse("0" + this._TextBox.Content) - this.Value);
+		private void _ApplyText() => this._ChangeValue(int.Parse(this._TextBox.Content) - this.Value);
 
 		public override void OnInitialization()
 		{

@@ -20,7 +20,6 @@ namespace Mekanik
 
 		public EntitySelector(Bunch<EntityType> _entities, LevelEditor _editor)
 		{
-			//this.Interfacial = true;
 			this.Entities = _entities;
 			_editor.EntityEditor = this.EntityEditor = new EntityEditor();
 		}
@@ -47,34 +46,10 @@ namespace Mekanik
 			foreach (KeyValuePair<string, Bunch<EntityTile>> g in groups.OrderBy(item => item.Key.GetAlphabetIndex()))
 			{
 				int height = Meth.Up(g.Value.Count / (double)this.Size.X);
-				CollapseGroup c = new CollapseGroup(FontBase.Consolas, g.Key, new EntityGroup(g.Value, this.Editor.TileEditor, this.EntityEditor, new Point(this.Size.X, height))) { InnerHeight = height * this.Parent.Tilesize.Y * 2, Width = this.Size.X * this.Parent.Tilesize.X * 2 };
+				CollapseGroup c = new CollapseGroup(FontBase.Consolas, g.Key, new EntityGroup(g.Value, this.Editor.TileEditor, this.EntityEditor, new Point(this.Size.X, height))) { InnerHeight = height * this.Parent.TileSize.Y * 2, Width = this.Size.X * this.Parent.TileSize.X * 2 };
 				this.Groups.Add(c);
 				this.Children.Add(c);
 			}
-
-			//for (int i = 0; i < this.Entities.Count; i++)
-			//	this.Graphics.Add(new Image(this.Entities[i].Icon) { Origin = 0.5, Position = this.Parent.Tilesize / 2 + this.Parent.Tilesize * new Vector(i % this.Size.X, Meth.Down(i / (double)this.Size.X)), Scale = Meth.Min(this.Parent.Tilesize.X / (double)this.Entities[i].Icon.Width, this.Parent.Tilesize.Y / (double)this.Entities[i].Icon.Height) });
-
-			//this.Scale = 2;
-
-			////this.Offset.X = -this.TileSize.X * this.Size.X;
-
-			//this.AddMouseArea(this.MouseArea = new MouseArea(new Rectangle(0, this.Size * this.Parent.Tilesize))
-			//	{
-			//		OnClick = key =>
-			//			{
-			//				Point p = this.LocalMousePosition / this.Parent.Tilesize;
-			//				int i = p.X + p.Y * this.Size.X;
-			//				if (i < this.Entities.Count)
-			//				{
-			//					EntityIcon icon = new EntityIcon(this.Editor.TileEditor.Layer, this.Entities[i], true) { Position = this.Editor.TileEditor.LocalMousePosition };
-			//					this.Editor.TileEditor.Layer.Entities.Add(icon);
-			//					this.Editor.TileEditor.Children.Add(icon);
-
-			//					this.Editor.EntityEditor.Select(null);
-			//				}
-			//			}
-			//	});
 		}
 
 		public override void Update()
@@ -88,10 +63,5 @@ namespace Mekanik
 
 			this.EntityEditor.Y = y;
 		}
-
-		//public override void Update()
-		//{
-		//	this.X = Parent.Size.X;
-		//}
 	}
 }

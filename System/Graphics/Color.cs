@@ -8,31 +8,59 @@ namespace Mekanik
 {
 	public struct Color
 	{
-		public byte R;
-		public byte G;
-		public byte B;
-		public byte A;
+		//public byte R;
+		//public byte G;
+		//public byte B;
+		//public byte A;
 
-		public double DR
+		//public double DR
+		//{
+		//	get { return this.R / 255.0; }
+		//	set { this.R = (byte)(value * 255); }
+		//}
+		//public double DG
+		//{
+		//	get { return this.G / 255.0; }
+		//	set { this.G = (byte)(value * 255); }
+		//}
+		//public double DB
+		//{
+		//	get { return this.B / 255.0; }
+		//	set { this.B = (byte)(value * 255); }
+		//}
+		//public double DA
+		//{
+		//	get { return this.A / 255.0; }
+		//	set { this.A = (byte)(value * 255); }
+		//}
+
+		public double DR;
+		public double DG;
+		public double DB;
+		public double DA;
+
+		public byte R
 		{
-			get { return this.R / 255.0; }
-			set { this.R = (byte)(value * 255); }
+			get { return (byte)(this.DR * 255); }
+			set { this.DR = value / 255.0; }
 		}
-		public double DG
+		public byte G
 		{
-			get { return this.G / 255.0; }
-			set { this.G = (byte)(value * 255); }
+			get { return (byte)(this.DG * 255); }
+			set { this.DG = value / 255.0; }
 		}
-		public double DB
+		public byte B
 		{
-			get { return this.B / 255.0; }
-			set { this.B = (byte)(value * 255); }
+			get { return (byte)(this.DB * 255); }
+			set { this.DB = value / 255.0; }
 		}
-		public double DA
+		public byte A
 		{
-			get { return this.A / 255.0; }
-			set { this.A = (byte)(value * 255); }
+			get { return (byte)(this.DA * 255); }
+			set { this.DA = value / 255.0; }
 		}
+
+
 		public Color Reverse
 		{
 			get { return new Color((byte)(255 - R), (byte)(255 - B), (byte)(255 - G)); }
@@ -155,26 +183,49 @@ namespace Mekanik
 
 		public Color(byte _brightness)
 		{
-			this.R = _brightness;
-			this.G = _brightness;
-			this.B = _brightness;
-			this.A = 255;
+			this.DR = _brightness / 255.0;
+			this.DG = _brightness / 255.0;
+			this.DB = _brightness / 255.0;
+			this.DA = 1;
+
+			//this.R = _brightness;
+			//this.G = _brightness;
+			//this.B = _brightness;
+			//this.A = 255;
 		}
 
 		public Color(byte _r, byte _g, byte _b, byte _a = 255)
 		{
-			this.R = _r;
-			this.G = _g;
-			this.B = _b;
-			this.A = _a;
+			this.DR = _r / 255.0;
+			this.DG = _g / 255.0;
+			this.DB = _b / 255.0;
+			this.DA = _a / 255.0;
+
+			//this.R = _r;
+			//this.G = _g;
+			//this.B = _b;
+			//this.A = _a;
 		}
 
 		public Color(byte[] _bytes)
 		{
-			this.R = _bytes[0];
-			this.G = _bytes[1];
-			this.B = _bytes[2];
-			this.A = (_bytes.Length == 4) ? _bytes[3] : (byte)255;
+			this.DR = _bytes[0] / 255.0;
+			this.DG = _bytes[1] / 255.0;
+			this.DB = _bytes[2] / 255.0;
+			this.DA = (_bytes.Length == 4) ? _bytes[3] / 255.0 : 1;
+
+			//this.R = _bytes[0];
+			//this.G = _bytes[1];
+			//this.B = _bytes[2];
+			//this.A = (_bytes.Length == 4) ? _bytes[3] : (byte)255;
+		}
+
+		internal Color(bool _double, double _r, double _g, double _b, double _a = 1)
+		{
+			this.DR = _r;
+			this.DG = _g;
+			this.DB = _b;
+			this.DA = _a;
 		}
 
 		public override string ToString()
@@ -291,21 +342,23 @@ namespace Mekanik
 				throw new Exception();
 		}
 
-		public static Color operator *(Color _one, double _two) { return new Color((byte)(_one.R * _two), (byte)(_one.G * _two), (byte)(_one.B * _two), _one.A); }
-		public static Color operator *(Color _one, Color _two)
-		{
-			double r1 = _one.R / 255.0, r2 = _two.R / 255.0;
-			double g1 = _one.G / 255.0, g2 = _two.G / 255.0;
-			double b1 = _one.B / 255.0, b2 = _two.B / 255.0;
-			double a1 = _one.A / 255.0, a2 = _two.A / 255.0;
-			return new Color((byte)(r1 * r2 * 255), (byte)(g1 * g2 * 255), (byte)(b1 * b2 * 255), (byte)(a1 * a2 * 255));
-		}
-		public static Color operator /(Color _one, double _two) { return new Color((byte)(_one.R / _two), (byte)(_one.G / _two), (byte)(_one.B / _two), _one.A); }
-		public static Color operator ^(Color _one, int _two) { return new Color(_one.R, _one.G, _one.B, (byte)_two); }
-		public static Color operator +(Color _one, Color _two) { return new Color((byte)(_one.R + _two.R), (byte)(_one.G + _two.G), (byte)(_one.B + _two.B), _one.A); }
+		public static Color operator *(Color _one, double _two) => new Color(true, _one.DR * _two, _one.DG * _two, _one.DB * _two, _one.DA);
+		public static Color operator *(Color _one, Color _two) => new Color(true, _one.DR * _two.DR, _one.DG * _two.DG, _one.DB * _two.DB, _one.DA * _two.DA);
+		//{
+		//	double r1 = _one.R / 255.0, r2 = _two.R / 255.0;
+		//	double g1 = _one.G / 255.0, g2 = _two.G / 255.0;
+		//	double b1 = _one.B / 255.0, b2 = _two.B / 255.0;
+		//	double a1 = _one.A / 255.0, a2 = _two.A / 255.0;
+		//	return new Color((byte)(r1 * r2 * 255), (byte)(g1 * g2 * 255), (byte)(b1 * b2 * 255), (byte)(a1 * a2 * 255));
+		//}
 
-		public static bool operator ==(Color _one, Color _two) { return _one.R == _two.R && _one.G == _two.G && _one.B == _two.B && _one.A == _two.A; }
-		public static bool operator !=(Color _one, Color _two) { return !(_one == _two); }
+		public static Color operator /(Color _one, double _two) => new Color(true, _one.DR / _two, _one.DG / _two, _one.DB / _two, _one.DA);
+		public static Color operator ^(Color _one, int _two) => new Color(true, _one.DR, _one.DG, _one.DB, _two / 255.0);
+		public static Color operator +(Color _one, Color _two) => new Color(true, _one.DR + _two.DR, _one.DG + _two.DG, _one.DB + _two.DB, _one.DA);
+		public static Color operator -(Color _one, Color _two) => new Color(true, _one.DR - _two.DR, _one.DG - _two.DG, _one.DB - _two.DB, _one.DA);
+		
+		public static bool operator ==(Color _one, Color _two) => _one.R == _two.R && _one.G == _two.G && _one.B == _two.B && _one.A == _two.A;
+		public static bool operator !=(Color _one, Color _two) => !(_one == _two);
 
 		public override bool Equals(object _object) => _object is Color && (this == (Color)_object);
 	}

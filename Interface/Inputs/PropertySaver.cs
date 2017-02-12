@@ -101,9 +101,14 @@ namespace Mekanik
 		{
 			object @out = _type.GetConstructor(new Type[0]).Invoke(new object[0]);
 
+			Bunch<FieldInfo> fs = _type.GetFields();
+
 			Dictionary<string, object> ps = Load(_type.GetFields().ToDictionary(item => item.Name, item => item.FieldType), _data);
 			foreach (MekaItem item in _data)
-				_type.GetField(item.Name).SetValue(@out, ps[item.Name]);
+			{
+				if (fs.Any(f => f.Name == item.Name))
+					_type.GetField(item.Name).SetValue(@out, ps[item.Name]);
+			}
 
 			return @out;
 		}

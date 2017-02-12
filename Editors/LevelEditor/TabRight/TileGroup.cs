@@ -28,18 +28,18 @@ namespace Mekanik
 
 		public override void OnInitialization()
 		{
-			Renderer c = new Renderer(this.Parent.Tilesize * this.Size * 2);
+			Renderer c = new Renderer(this.Parent.TileSize * this.Size * 2);
 			Bunch<Graphic> gs = new Bunch<Graphic>();
 			for (int i = 0; i < this.Areaset.Tiles.Count; i++)
-				gs.Add(new Image(this.Areaset.Tiles[i]) { Position = this.Parent.Tilesize * new Vector(i % this.Size.X, Meth.Down(i / (double)this.Size.X)) * 2, Scale = 2 });
+				gs.Add(new Image(this.Areaset.Tiles[i]) { Position = this.Parent.TileSize * new Vector(i % this.Size.X, Meth.Down(i / (double)this.Size.X)) * 2, Scale = 2 });
 			c.Draw(gs);
 			this.Graphics.Add(new Image(c.ImageSource));
 
-			this.AddMouseArea(new MouseArea(new Rectangle(0, this.Size * this.Parent.Tilesize * 2))
+			this.AddMouseArea(new MouseArea(new Rectangle(0, this.Size * this.Parent.TileSize * 2))
 				{
 					OnClick = key =>
 						{
-							Point p = this.LocalMousePosition / this.Parent.Tilesize / 2;
+							Point p = this.LocalMousePosition / this.Parent.TileSize / 2;
 							int i = p.X + p.Y * this.Size.X;
 							if (i < this.Areaset.Tiles.Count)
 								this.TileEditor.CurTile = new Tuple<string, int>(this.Areaset.Name, i);
@@ -52,7 +52,7 @@ namespace Mekanik
 			this.Overlay.Visible = this.TileEditor.CurTile.Item1 == this.Areaset.Name;
 			if (this.Overlay.Visible)
 			{
-				this.Overlay.Position = new Vector(this.TileEditor.CurTile.Item2 % this.Size.X, Meth.Down(this.TileEditor.CurTile.Item2 / (double)this.Size.X)) * this.Parent.Tilesize * 2;
+				this.Overlay.Position = new Vector(this.TileEditor.CurTile.Item2 % this.Size.X, Meth.Down(this.TileEditor.CurTile.Item2 / (double)this.Size.X)) * this.Parent.TileSize * 2;
 				this.OverlayTime++;
 
 				if (this.OverlayTime == 12)
@@ -62,7 +62,7 @@ namespace Mekanik
 				}
 
 				if (this.OverlayStatus)
-					this.Overlay.Position.X += this.Parent.Tilesize.X * 2;
+					this.Overlay.Position.X += this.Parent.TileSize.X * 2;
 				this.Overlay.Scale.X = (this.OverlayStatus ? -1 : 1) * 2;
 			}
 		}

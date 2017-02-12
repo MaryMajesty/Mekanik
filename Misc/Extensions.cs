@@ -409,7 +409,7 @@ namespace Mekanik
 				if (abc.Contains(c))
 				{
 					black = false;
-					rot += (abc.IndexOf(c) - 13) / 26.0 * Meth.Tau / Meth.Pow(5, i);
+					rot += (abc.IndexOf(c) - 13) / 26.0 / Meth.Pow(5, i);
 				}
 			}
 
@@ -427,8 +427,12 @@ namespace Mekanik
 				return Key.MouseMiddle;
 			else if (@this == OpenTK.Input.MouseButton.Right)
 				return Key.MouseRight;
+			else if (@this == OpenTK.Input.MouseButton.Button1)
+				return Key.MouseBackward;
+			else if (@this == OpenTK.Input.MouseButton.Button2)
+				return Key.MouseForward;
 			else
-				throw new Exception();
+				return Key.Unknown;
 		}
 
 		public static OpenTK.Graphics.Color4 ToOpenTK(this Color @this) => new OpenTK.Graphics.Color4(@this.R, @this.G, @this.B, @this.A);

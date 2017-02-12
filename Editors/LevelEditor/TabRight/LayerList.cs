@@ -12,12 +12,7 @@ namespace Mekanik
 		public bool NeedsUpdate = true;
 		public Layer NewLayer;
 		public bool Changed;
-
-		//public double Width
-		//{
-		//	get { return ((TabList)this.Parents[1]).InnerSize.X; }
-		//}
-
+		
 		public LayerList(TileEditor _editor)
 			: base()
 		{
@@ -44,8 +39,10 @@ namespace Mekanik
 
 			this.OnItemAdd = pos =>
 				{
-					Layer l = new Layer(_editor.Areasets, this.Parent.Tilesize, _editor.DefaultTile) { Size = _editor.Size };
+					Layer l = new Layer(_editor.Areasets, this.Parent.TileSize, _editor.DefaultTile) { Size = _editor.Size };
 					this.NewLayer = l;
+
+					this.Editor.Editor.EntityEditor.NeedsToDeselect = true;
 
 					return new LayerItem(_editor, l);
 				};
@@ -56,7 +53,6 @@ namespace Mekanik
 			base.OnInitialization();
 
 			this.Width = this.Editor.Editor.TabListRight.InnerSize.X;
-			//this.SetItems(this.Editor.Layers.Select(item => new LayerItem(this.Editor, item)));
 		}
 
 		public override void Update()
@@ -97,7 +93,7 @@ namespace Mekanik
 		}
 		public Vector FitScale
 		{
-			get { return this.FitRect.Size / (this.Layer.Size * this.Editor.Parent.Tilesize); }
+			get { return this.FitRect.Size / (this.Layer.Size * this.Editor.Parent.TileSize); }
 		}
 
 		public LayerItem(TileEditor _editor, Layer _layer)
@@ -109,23 +105,13 @@ namespace Mekanik
 
 			this.Images[0] = new Image(new ImageSource(1, 1));
 			this.Images[1] = new Image(new ImageSource(1, 1));
-
-			//this.Image.Position = this.FitPosition;
-			//this.Image.Scale = this.FitScale;
-
+			
 			this.Highlight = new Rectangle(0, new Vector(this.Editor.Editor.TabListRight.InnerSize.X, 100)) { Color = Color.White * 0.8 };
 
 			this.Frame = new VertexArray(VertexArrayType.LinesStrip) { Color = Color.Black };
 			this.Frame.Add(0, new Vector(1, 0), 1, new Vector(0, 1), 0);
 
 			this._UpdateEntities();
-
-			//this.Graphics.Add();
-			//this.Graphics.Add(this.Cross = new VertexArray(VertexArrayType.Lines) { Position = new Vector(this.Size.X + this.Side / 2, this.Size.Y / 4), Color = Color.Red } );
-			//this.Cross.Add(this.Side / -5);
-			//this.Cross.Add(this.Side / 5);
-			//this.Cross.Add(new Vector(this.Side / 5, -this.Side / 5));
-			//this.Cross.Add(new Vector(-this.Side / 5, this.Side / 5));
 		}
 
 		public override double GetHeight() => this.Size.Y;
@@ -165,6 +151,7 @@ namespace Mekanik
 									this.Editor.SwitchToLayer(this._ListIndex + 1);
 							}
 							((LayerList)this.Parents[0]).RemoveItem(this);
+							this.Editor.Editor.EntityEditor.NeedsToDeselect = true;
 						}
 				});
 			this.Children.Add(this.Main = new Checkbox(this.Editor.MainLayer == this.Layer)
@@ -207,18 +194,14 @@ namespace Mekanik
 
 		public override void Update()
 		{
-			if (this.Layer.SizeChangedLayer/* || this.Layer.TilesChanged*/)
+			if (this.Layer.SizeChangedLayer)
 			{
 				this.Layer.SizeChangedLayer = false;
-				//this.Layer.TilesChanged = false;
 
 				for (int i = 0; i <= 1; i++)
 				{
-					//PhotoCanvas c = new PhotoCanvas(this.FitRect.Size);
-					//c.Draw(new Image(this.Layer.Previews[i]) { Scale = this.FitScale });
-					//this.Images[i].Source = c.ImageSource.Clone();//this.Layer.Previews[i];
 					this.Images[i].Source = this.Layer.Previews[i];
-					this.Images[i].Scale = this.FitRect.Size / (this.Layer.Size * this.Parent.Tilesize);
+					this.Images[i].Scale = this.FitRect.Size / (this.Layer.Size * this.Parent.TileSize);
 					this.Images[i].Position = this.FitPosition;
 				}
 

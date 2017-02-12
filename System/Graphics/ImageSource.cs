@@ -23,10 +23,6 @@ namespace Mekanik
 		{
 			get { return GameBase.ImageToBytes(this); }
 		}
-		public byte[] BytesRgb
-		{
-			get { return GameBase.ImageToBytesRgb(this); }
-		}
 		public Color this[int _x, int _y]
 		{
 			get { return this.Pixels[_x, _y]; }
@@ -184,13 +180,19 @@ namespace Mekanik
 		{
 			ImageSource[,] @out = new ImageSource[_xcount, _ycount];
 
-			int w = this.Size.X / _xcount;
-			int h = this.Size.Y / _ycount;
+			int w = this.Width / _xcount;
+			int h = this.Height / _ycount;
 
+			byte[] bs = this.Bytes;
 			for (int x = 0; x < _xcount; x++)
 			{
 				for (int y = 0; y < _ycount; y++)
-					@out[x, y] = new ImageSource(this.Pixels.SubArray(x * w, y * h, w, h));
+				{
+					Renderer r = new Renderer(w, h);
+					r.Draw(new Image(this) { Position = new Vector(x * w, y * h) * -1 });
+					@out[x, y] = r.ImageSource;
+					r.DisposeWithoutImage();
+				}
 			}
 
 			return @out;
@@ -207,16 +209,26 @@ namespace Mekanik
 			return @out;
 		}
 
+		public ImageSource GetSplitImage(Point _amount, Point _pos)
+		{
+			Point size = this.Size / _amount;
+			Renderer r = new Renderer(size);
+			r.Draw(new Image(this) { Position = -_pos * size });
+			ImageSource @out = r.ImageSource;
+			r.DisposeWithoutImage();
+			return @out;
+		}
+
 		public void Dispose() => GL.DeleteTextures(1, new int[] { this._TextureId });
 
 		public void Save(string _path) => File.Write(_path, this.Bytes);
-		public void SaveRgb(string _path) => File.Write(_path, this.BytesRgb);
+		//public void SaveRgb(string _path) => File.Write(_path, this.BytesRgb);
 
 		public ImageSource Extend()
 		{
 			Renderer r = new Renderer(this.Size + 2);
-			r.Draw(new Image(this) { Position = 1 });
-			r.Dispose();
+			r.Draw(new Image(this) { Position = 1, BlendMode = BlendMode.None });
+			r.DisposeWithoutImage();
 			return r.ImageSource;
 		}
 
@@ -235,8 +247,8 @@ namespace Mekanik
 		public ImageSource Clone()
 		{
 			Renderer r = new Renderer(this.Size);
-			r.Draw(new Image(this));
-			r.Dispose();
+			r.Draw(new Image(this) { BlendMode = BlendMode.None });
+			r.DisposeWithoutImage();
 			return r.ImageSource;
 		}
 	}

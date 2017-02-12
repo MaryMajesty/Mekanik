@@ -30,7 +30,7 @@ namespace Mekanik
 			this.Interfacial = true;
 			this.Contents = _children;
 
-			this.Graphics.Add(this.Text = new Text(_font) { Content = _name, Origin = new Vector(0, 0.5), Z = 1 });
+			this.Graphics.Add(this.Text = new Text(_font) { Content = _name, Z = 1 });
 		}
 
 		public override void OnInitialization()
@@ -58,7 +58,7 @@ namespace Mekanik
 			if (Meth.Abs(this.Progress - (this.Opened ? 1 : 0)) < 0.01)
 				this.Progress = this.Opened ? 1 : 0;
 
-			this.Text.Position.Y = BarHeight / 2 + this.InnerHeight * this.Progress;
+			this.Text.Position.Y = BarHeight / 2 + this.InnerHeight * this.Progress - this.Text.Height / 2;
 			this.Bar.Position.Y = this.InnerHeight * this.Progress;
 			this.Triangle.Position = new Vector(this.Width - this.BarHeight / 2, this.BarHeight / 2 + this.InnerHeight * this.Progress);
 

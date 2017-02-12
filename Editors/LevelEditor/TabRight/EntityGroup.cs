@@ -25,21 +25,18 @@ namespace Mekanik
 
 		public override void OnInitialization()
 		{
-			//for (int i = 0; i < this.Types.Count; i++)
-			//	this.Graphics.Add(new Image(this.Types[i].Icon) { Origin = 0.5, Position = this.Parent.Tilesize / 2 + this.Parent.Tilesize * new Vector(i % this.Size.X, Meth.Down(i / (double)this.Size.X)), Scale = Meth.Min(this.Parent.Tilesize.X / (double)this.Types[i].Icon.Width, this.Parent.Tilesize.Y / (double)this.Types[i].Icon.Height) });
-
-			Renderer r = new Renderer(this.Parent.Tilesize * this.Size * 2);
+			Renderer r = new Renderer(this.Parent.TileSize * this.Size * 2);
 			Bunch<Graphic> gs = new Bunch<Graphic>();
 			for (int i = 0; i < this.Types.Count; i++)
-				gs.Add(new Image(this.Types[i].Icon) { Origin = 0.5, Position = (this.Parent.Tilesize / 2 + this.Parent.Tilesize * new Vector(i % this.Size.X, Meth.Down(i / (double)this.Size.X))) * 2, Scale = Meth.Min(this.Parent.Tilesize.X / (double)this.Types[i].Icon.Width, this.Parent.Tilesize.Y / (double)this.Types[i].Icon.Height) * 2 });
+				gs.Add(new Image(this.Types[i].Icon) { Origin = 0.5, Position = (this.Parent.TileSize / 2 + this.Parent.TileSize * new Vector(i % this.Size.X, Meth.Down(i / (double)this.Size.X))) * 2, Scale = Meth.Min(this.Parent.TileSize.X / (double)this.Types[i].Icon.Width, this.Parent.TileSize.Y / (double)this.Types[i].Icon.Height) * 2 });
 			r.Draw(gs);
 			this.Graphics.Add(new Image(r.ImageSource));
 
-			this.AddMouseArea(new MouseArea(new Rectangle(0, this.Size * this.Parent.Tilesize * 2))
+			this.AddMouseArea(new MouseArea(new Rectangle(0, this.Size * this.Parent.TileSize * 2))
 				{
 					OnClick = key =>
 						{
-							Point p = this.LocalMousePosition / this.Parent.Tilesize / 2;
+							Point p = this.LocalMousePosition / this.Parent.TileSize / 2;
 							int i = p.X + p.Y * this.Size.X;
 							if (i < this.Types.Count)
 							{
@@ -49,8 +46,8 @@ namespace Mekanik
 								this.TileEditor.Children.Add(icon);
 
 								Vector s = this.Types[i].Icon.Size;
-								Rect n = (new Rect(0, this.Parent.Tilesize)).MakeFit(s);
-								icon._DragPoint = ((this.LocalMousePosition % ((Vector)this.Parent.Tilesize * 2)) / 2 - n.Position) / n.Size * s - s * icon.Type.Origin;
+								Rect n = (new Rect(0, this.Parent.TileSize)).MakeFit(s);
+								icon._DragPoint = ((this.LocalMousePosition % ((Vector)this.Parent.TileSize * 2)) / 2 - n.Position) / n.Size * s - s * icon.Type.Origin;
 
 								this.EntityEditor.Select(icon);
 							}

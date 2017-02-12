@@ -45,7 +45,9 @@ namespace Mekanik
 					als.Add(new Alignment(new Label("Z:"), this.ZBox = new NumBox(Meth.Down(_entity.EntityZ)) { MinValue = -9999 }));
 				}
 
-				if (_entity != null && _entity.Type.Name != "Decoration")
+				if (_entity == null)
+					this.PropertyEditor = new PropertyEditor(new Dictionary<string, Type>());
+				else if (_entity.Type.Name != "Decoration")
 					als.Add(this.PropertyEditor = new PropertyEditor(this.Icon.Properties.ToDictionary(item => item.Name, item => item.Type), this.Icon.Properties.ToDictionary(item => item.Name, item => (object)item.Value)));
 
 				this.Children.Add(new Alignment(als) { Vertical = true });
@@ -63,8 +65,8 @@ namespace Mekanik
 		{
 			if (this.Icon != null)
 			{
-				double tx = this.XBox.Value/* + this.Icon.Type.Origin.X * this.Icon.Icon.Width % 1*/;
-				double ty = this.YBox.Value/* + this.Icon.Type.Origin.Y * this.Icon.Icon.Height % 1*/;
+				double tx = this.XBox.Value;
+				double ty = this.YBox.Value;
 
 				if (!this.XBox._TextBox.IsEdited && !this.Icon.IsDragged && this.Icon.X != tx)
 				{

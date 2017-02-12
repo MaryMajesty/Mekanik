@@ -21,7 +21,6 @@ namespace Mekanik
 		public ImageSource Texture;
 		public bool SmoothTexture;
 		public Shader Shader;
-		public Vector Offset;
 		public Func<Vertex, Vertex> VertexModifyer;
 		
 		protected internal abstract VertexArray _ToVertexArray();
@@ -30,7 +29,7 @@ namespace Mekanik
 			VertexArray v = this._ToVertexArray();
 
 			v.Position = this.Position;
-			//v._OffsetPosition = this._OffsetPosition;
+			v.Offset = this.Offset;
 			v.Scale = this.Scale;
 			v.Rotation = this.Rotation;
 			v.Origin = this.Origin;

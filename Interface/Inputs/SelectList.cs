@@ -47,7 +47,7 @@ namespace Mekanik
 
 		public override void OnInitialization()
 		{
-			this.Children.Add(this.Labels = this.Items.Select(item => new Label(item) { Z = 1, Visible = false, CharSize = 14 }));
+			this.Children.Add(this.Labels = this.Items.Select(item => new Label(item) { Z = 1, Shader = Shader.TextOutline }));
 			
 			this.AddMouseArea(this.MouseArea = new MouseArea(new Rectangle(0, 0, 100, 20)) { ClickableBy = new Bunch<Key>(Key.MouseUp, Key.MouseDown), OnClick = Click });
 			Parent.Clock.Add(2, () => this.LastHovered = true);
@@ -85,6 +85,9 @@ namespace Mekanik
 			this.Expansion += ((this.MouseArea.IsHovered ? 1 : 0) - this.Expansion) / 5;
 
 			this.Quad.Rotation += ((this.TargetQuadRot * Meth.Tau / -4) - this.Quad.Rotation) / 5;
+			if (Meth.Abs(this.Quad.Rotation - this.TargetQuadRot * Meth.Tau / -4) < 0.1)
+				this.Quad.Rotation = this.TargetQuadRot * Meth.Tau / -4;
+
 			this.Quad.Scale = new Vector(1, 2 / 3.0 + this.Expansion / 3.0);
 			if (Meth.Abs(this.TargetQuadRot % 2) == 1)
 				this.Quad.Scale.Angle += Meth.Tau / 4;
@@ -104,23 +107,24 @@ namespace Mekanik
 			{
 				byte a = (byte)(Meth.Pow(Meth.Limit(0, 3 - Meth.Abs(i - this.Index), 3) / 3.0 * ((i == this.TargetIndex) ? 1 : this.Expansion), 0.4) * 255);
 				
-				if (a != 0 && !this.Labels[i].Visible)
-				{
-					this.Labels[i].Visible = true;
-					this.Labels[i].Shader = Shader.TextOutline;
+				//if (a != 0 && !this.Labels[i].Visible)
+				//{
+				//	this.Labels[i].Visible = true;
+				//	//this.Labels[i].Shader = Shader.TextOutline;
+				//	//this.Labels[i].Shader["Color"] = Color.Red;
 
-					//this.Labels[i].RenderIntermediately = true;
-					//this.Labels[i].RenderGraphicsIntermediately = true;
-					//this.Labels[i].IntermediateSize = this.Labels[i].Size;
-					//this.Labels[i].IntermediateShader = Shader.TextOutline;
-				}
+				//	//this.Labels[i].RenderIntermediately = true;
+				//	//this.Labels[i].RenderGraphicsIntermediately = true;
+				//	//this.Labels[i].IntermediateSize = this.Labels[i].Size;
+				//	//this.Labels[i].IntermediateShader = Shader.TextOutline;
+				//}
 
-				if (this.Labels[i].Visible)
-				{
+				//if (this.Labels[i].Visible)
+				//{
 					double dis = Meth.Limit(0, Meth.Abs(i - this.Index) - 2, 1);
 					
 					this.Labels[i].Color ^= (byte)(((i == this.TargetIndex) ? 255 : this.Expansion * 255) * (1 - dis));
-					this.Labels[i].Shader["Alpha"] = (a / 255.0);
+					//this.Labels[i].Shader["Alpha"] = (a / 255.0);
 
 					this.Labels[i].Z = a / 255.0 * this.Expansion;
 
@@ -128,7 +132,7 @@ namespace Mekanik
 					double r = p.Angle.ToHalfTau() / 4;
 					this.Labels[i].Rotation = r;
 					this.Labels[i].Position = p;
-				}
+				//}
 			}
 		}
 	}

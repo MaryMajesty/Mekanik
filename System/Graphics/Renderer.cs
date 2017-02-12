@@ -56,8 +56,8 @@ namespace Mekanik
 					ImageSource img = new ImageSource(this.Width, this.Height, data);
 
 					Renderer r = new Renderer(this.Width, this.Height);
-					r.Draw(new Image(img) { Position = new Vector(0, this.Height), Scale = new Vector(1, -1) });
-					r.Dispose();
+					r.Draw(new Image(img) { Position = new Vector(0, this.Height), Scale = new Vector(1, -1), BlendMode = BlendMode.None });
+					r.DisposeWithoutImage();
 					
 					return r.ImageSource;
 				}
@@ -74,11 +74,10 @@ namespace Mekanik
 				this._TextureId = GL.GenTexture();
 
 				this._SetResolution(_resolutionx, _resolutiony);
+				this._ImageSource = new ImageSource(this._TextureId, this.Resolution);
 			}
 			else
 				this._Resolution = new Point(_resolutionx, _resolutiony);
-
-			this._ImageSource = new ImageSource(this._TextureId, this.Resolution);
 		}
 
 		public Renderer(Point _resolution, bool _rendertowindow = false) : this(_resolution.X, _resolution.Y, _rendertowindow) { }
@@ -103,7 +102,7 @@ namespace Mekanik
 			if (this._ImageSource != null)
 				this._ImageSource._SetSize(_resolutionx, _resolutionx);
 		}
-
+		
 		public void Clear(Color _color) => this.Draw(new Rectangle(0, this.Resolution) { Color = _color, BlendMode = BlendMode.None });
 
 		public void Clear() => this.Clear(this.Background);
@@ -113,7 +112,7 @@ namespace Mekanik
 			GL.BindTexture(TextureTarget.Texture2D, 0);
 			GL.Enable(EnableCap.Texture2D);
 			GL.BindFramebuffer(FramebufferTarget.Framebuffer, this._FramebufferId);
-
+			
 			GL.MatrixMode(MatrixMode.Projection);
 			GL.LoadIdentity();
 			GL.Viewport(0, 0, this.Resolution.X, this.Resolution.Y);
@@ -125,7 +124,7 @@ namespace Mekanik
 			
 			foreach (Graphic g in _graphics)
 				Renderer._Draw(g);
-
+			
 			GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 		}
 
@@ -162,12 +161,15 @@ namespace Mekanik
 				}
 				else
 					GL.BindTexture(TextureTarget.Texture2D, 0);
-
+				
 				GL.Enable(EnableCap.Blend);
 				if (v.BlendMode == BlendMode.Alpha)
-					GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+					//GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+					GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.SrcAlpha, BlendingFactorDest.One);
 				else if (v.BlendMode == BlendMode.None)
 					GL.BlendFunc(BlendingFactorSrc.One, BlendingFactorDest.Zero);
+				else if (v.BlendMode == BlendMode.Multiply)
+					GL.BlendFunc(BlendingFactorSrc.DstColor, BlendingFactorDest.Zero);
 				else
 					GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.One);
 				
@@ -175,14 +177,17 @@ namespace Mekanik
 					GL.Begin(PrimitiveType.Triangles);
 				else
 					GL.Begin(PrimitiveType.Lines);
-
 				
 				foreach (Vertex vx in v.Vertices)
 				{
 					GL.Color4(vx.Color.R, vx.Color.G, vx.Color.B, vx.Color.A);
 					GL.TexCoord2(vx.ImagePosition.X / size.X, vx.ImagePosition.Y / size.Y);
 					GL.Vertex2(vx.Position.X, vx.Position.Y);
+					//GL.Vertex3(vx.Position.X, vx.Position.Y, vx.Position.Z);
 				}
+
+				//if (!(_graphic is Rectangle))
+				//	throw new Exception();
 
 				GL.End();
 			}
@@ -197,6 +202,9 @@ namespace Mekanik
 		public void Dispose()
 		{
 			GL.DeleteFramebuffers(1, new int[] { this._FramebufferId });
+			GL.DeleteTextures(1, new int[] { this._TextureId });
 		}
+
+		public void DisposeWithoutImage() => GL.DeleteFramebuffers(1, new int[] { this._FramebufferId });
 	}
 }

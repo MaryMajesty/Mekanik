@@ -58,6 +58,7 @@ void main()
 				Shader @out = Shader.FromRaw("Mekanik.TextOutline",
 @"uniform float Radius;
 uniform float Alpha;
+uniform vec4 Color;
 
 void main()
 {
@@ -80,52 +81,53 @@ void main()
 	    }
 	}
 	
-	vec4 white = vec4(1.0, 1.0, 1.0, pow(1.0 - dis, 0.4));
-	gl_FragColor = gl_Color * ((white * (1.0 - pixel.a) + pixel * pixel.a) * Alpha + white * (1.0 - Alpha));
+	vec4 c = vec4(Color.r, Color.g, Color.b, pow(Color.a - dis, 0.4));
+	gl_FragColor = gl_Color * ((c * (1.0 - pixel.a) + pixel * pixel.a) * Alpha + c * (1.0 - Alpha));
 }");
-				@out["Radius"] = 5;
+				@out["Radius"] = 3;
 				@out["Alpha"] = 1;
+				@out["Color"] = Color.White;
 				return @out;
 			}
 		}
 
-		public static Shader TextOutlineBlack
-		{
-			get
-			{
-				Shader @out = Shader.FromRaw("Mekanik.TextOutlineBlack",
-@"uniform float Radius;
-uniform float Alpha;
+//		public static Shader TextOutlineBlack
+//		{
+//			get
+//			{
+//				Shader @out = Shader.FromRaw("Mekanik.TextOutlineBlack",
+//@"uniform float Radius;
+//uniform float Alpha;
 
-void main()
-{
-	vec2 pos = gl_TexCoord[0].xy;
-    vec4 pixel = texture2D(Texture, pos);
+//void main()
+//{
+//	vec2 pos = gl_TexCoord[0].xy;
+//    vec4 pixel = texture2D(Texture, pos);
 	
-	float dis = 1.0;
+//	float dis = 1.0;
 	
-	if (pixel.a < 1.0)
-	{
-	    for (float x = -Radius; x <= Radius; x++)
-	    {
-	    	for (float y = -Radius; y <= Radius; y++)
-	    	{
-				float a = texture2D(Texture, pos + vec2(x / Size.x, y / Size.y)).a;
-				float d = sqrt(x * x + y * y + (1.0 - a)) / Radius;
-				if (d <= 1.0 && d < dis && a > 0.0)
-	    			dis = d;
-	    	}
-	    }
-	}
+//	if (pixel.a < 1.0)
+//	{
+//	    for (float x = -Radius; x <= Radius; x++)
+//	    {
+//	    	for (float y = -Radius; y <= Radius; y++)
+//	    	{
+//				float a = texture2D(Texture, pos + vec2(x / Size.x, y / Size.y)).a;
+//				float d = sqrt(x * x + y * y + (1.0 - a)) / Radius;
+//				if (d <= 1.0 && d < dis && a > 0.0)
+//	    			dis = d;
+//	    	}
+//	    }
+//	}
 	
-	vec4 white = vec4(1.0, 1.0, 1.0, pow(1.0 - dis, 0.4));
-	gl_FragColor = gl_Color * ((white * (1.0 - pixel.a) + pixel * pixel.a) * Alpha + white * (1.0 - Alpha));
-}");
-				@out["Radius"] = 5;
-				@out["Alpha"] = 1;
-				return @out;
-			}
-		}
+//	vec4 white = vec4(1.0, 1.0, 1.0, pow(1.0 - dis, 0.4));
+//	gl_FragColor = gl_Color * ((white * (1.0 - pixel.a) + pixel * pixel.a) * Alpha + white * (1.0 - Alpha));
+//}");
+//				@out["Radius"] = 5;
+//				@out["Alpha"] = 1;
+//				return @out;
+//			}
+//		}
 
 		public static Shader Grid
 		{
@@ -247,6 +249,11 @@ void main()
 				else
 					throw new Exception("Shader parameter type " + p.Value.GetType().Name + " is not supported yet.");
 			}
+		}
+
+		public void Dispose()
+		{
+			GL.DeleteProgram(this._ProgramId);
 		}
 	}
 }

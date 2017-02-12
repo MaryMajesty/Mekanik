@@ -12,10 +12,7 @@ namespace Mekanik
 		public Action OnExit;
 		public Tuple<string, int> DefaultTile;
 		public Point LevelSize;
-
-		//Bunch<Type> Entities;
-		//Bunch<ImageSource> Tiles = new Bunch<ImageSource>();
-		//Point TileSize;
+		
 		internal TileEditor TileEditor;
 		internal Bunch<EntityType> EntityTypes;
 		TileSelector TileSelector;
@@ -25,11 +22,8 @@ namespace Mekanik
 		internal TabList TabListRight;
 		internal EntityEditor EntityEditor;
 		internal LayerList LayerList;
-		//Scrollbar ScrollbarX;
-		//Scrollbar ScrollbarY;
 		public bool OnionSkin;
 		public LevelPreview LevelPreview;
-		//Bunch<Tileset> Tilesets = new Bunch<Tileset>();
 		public Type LevelProperties;
 		internal LevelInfoEditor LevelInfoEditor;
 		internal LevelPropertiesEditor LevelPropertiesEditor;
@@ -37,7 +31,7 @@ namespace Mekanik
 		internal bool StartFixedResolution;
 		public ScaleMode StartScaleMode;
 		internal bool StartMouseLimitedToScreen;
-		//internal bool StartIgnoreMouseWithoutFocus;
+		internal bool StartUseMultipleRenderers;
 
 		public Tuple<string, int> CurTile
 		{
@@ -54,31 +48,14 @@ namespace Mekanik
 			this.LevelSize = _levelsize;
 			this.DefaultTile = _defaulttile;
 			this.LevelProperties = _levelproperties;
+
+			this.AttachedToScreen = true;
 		}
 		
-		//public LevelEditor(int _levelwidth, int _levelheight, string _defaultareaset, int _defaulttile, Type _levelinfo = null)
-		//	: this(new Point(_levelwidth, _levelheight), new Tuple<string, int>(_defaultareaset, _defaulttile), _levelinfo) { }
-
 		public override void OnInitialization()
 		{
 			this.Parent._LevelEditor = this;
-
-			//this.Parent._LoadAreasets();
-
-			//this.Parent.Title = string.Join(", ", this.Tilesets.Select(item => item.Name));
-
-			//ImageSource[,] tiles = this.Parent.Tileset.Split(this.Parent.Tileset.Size / this.Parent.Tilesize);
-			//for (int y = 0; y < tiles.GetLength(1); y++)
-			//{
-			//	for (int x = 0; x < tiles.GetLength(0); x++)
-			//		this.Tiles.Add(tiles[x, y]);
-			//}
-
-			//MekaItem t = MekaItem.LoadFromFile("Files\\Levels\\test.meka");
-			//throw new Exception();
-
-			//this.Children.Add(new Scrollbar());
-
+			
 			this.EntityTypes = this.Parent.EntityTypes.Select(item => new EntityType(item));
 
 			this.Children.Add(this.Menu = new FileMenu
@@ -102,7 +79,7 @@ namespace Mekanik
 					new Selectable("Onion Skin", () => this.OnionSkin = !this.OnionSkin),
 					new Selectable("Grid", () => this.TileEditor.Grid.Visible = !this.TileEditor.Grid.Visible)
 				) { Z = 8 });
-			this.Children.Add(this.TileEditor = new TileEditor(this.Parent.Areasets, this.DefaultTile, this.Parent.Tilesize) { Parent = this.Parent });
+			this.Children.Add(this.TileEditor = new TileEditor(this.Parent.Areasets, this.DefaultTile, this.Parent.TileSize) { Parent = this.Parent });
 
 			this.Children.Add(this.TabListLeft = new TabList
 				(
@@ -111,36 +88,30 @@ namespace Mekanik
 					new TabInfo("Resources", new Alignment(new AnimationEditor(), new AreasetEditor()) { Vertical = true })
 				) { InnerSize = new Vector(32 * 12, 32 * 16), Position = new Vector(0, 22), Z = 8 });
 
+			//this.Parent.Clock.Add(1, () => this.TabListLeft.SelectTab(1));
+			//this.Parent.Clock.Add(3, () => this.TabListLeft.SelectTab(0));
+
 			this.Children.Add(this.TabListRight = new TabList
 				(
 					new TabInfo("Tiles", this.TileSelector = new TileSelector(this.Parent.Areasets)),
 					new TabInfo("Entities", this.EntitySelector = new EntitySelector(this.EntityTypes, this)),
-					new TabInfo("Layers", this.LayerList = new LayerList(this.TileEditor))//,
-					//new TabInfo("Info", this.LevelInfoEditor = new LevelInfoEditor(this, this.LevelProperties))
-						//this.WidthBox = new TextBox(this.LevelSize.X.ToString()) { AllowedChars = "0123456789", OnDefocus = UpdateSize, Position = new Vector(20, 20) },
-						//this.HeightBox = new TextBox(this.LevelSize.Y.ToString()) { AllowedChars = "0123456789", OnDefocus = UpdateSize, Position = new Vector(20, 40) })
+					new TabInfo("Layers", this.LayerList = new LayerList(this.TileEditor))
 				) { InnerSize = new Vector(32 * 12, 32 * 16), AlignRight = true, Z = 8 });
 
 			this.Children.Add(this.LevelPreview = new LevelPreview(this) { Z = 8 });
 
 			this.Children.Add(new ScrollBackground(this));
-
-			//this.Children.Add(this.ScrollbarX = new Scrollbar() { Vertical = false, Z = 2 });
-			//this.ScrollbarX.MaxValue = 10000;
-
-			//this.Children.Add(this.ScrollbarY = new Scrollbar() { Z = 2 });
-			//this.ScrollbarY.MaxValue = 10000;
-
-			//this.Children.Add(new Button(Font.Consolas) { Content = "Exit", Size = new Vector(100, 20), Position = new Vector(0, 500), OnClick = this.Exit });
-
+			
 			this.StartFixedResolution = this.Parent.FixedResolution;
 			this.StartScaleMode = this.Parent.ScaleMode;
 			this.StartMouseLimitedToScreen = this.Parent.MouseLimitedToScreen;
+			this.StartUseMultipleRenderers = this.Parent.UseMultipleRenderers;
 			//this.StartIgnoreMouseWithoutFocus = this.Parent.IgnoreMouseWithoutFocus;
 
 			this.Parent.FixedResolution = false;
 			this.Parent.ScaleMode = ScaleMode.None;
 			this.Parent.MouseLimitedToScreen = false;
+			this.Parent.UseMultipleRenderers = false;
 			//this.Parent.IgnoreMouseWithoutFocus = false;
 		}
 
@@ -156,10 +127,11 @@ namespace Mekanik
 				//this.Parent.IgnoreMouseWithoutFocus = this.StartIgnoreMouseWithoutFocus;
 				this.Parent.MouseLimitedToScreen = this.StartMouseLimitedToScreen;
 				this.Parent.ScaleMode = this.StartScaleMode;
+				this.Parent.UseMultipleRenderers = this.StartUseMultipleRenderers;
 
 				this.Parent.Entities.Remove(this);
 
-				this.Parent.StartTest(new LevelSource(MekaItem.FromBytesEncrypted(this._Export()), this.Parent), this.Parent.SavePath, _entrance);
+				this.Parent.StartTest(new LevelSource(this.Parent, MekaItem.FromBytesEncrypted(this._Export())), this.Parent.SavePath, _entrance);
 			}
 		}
 
@@ -172,39 +144,6 @@ namespace Mekanik
 
 			this.LevelPreview.X = this.Parent.Width - this.TabListRight.OuterSize.X - 1;
 			this.LevelPreview.Y = this.Parent.Height - this.LevelPreview.Height - 1;
-
-
-
-			//Vector size = this.TileEditor.Size * this.Parent.Tilesize * 2;
-			//Vector s = this.EditorSize;
-
-			//this.ScrollbarX.ValueRange = s.X;
-			//this.ScrollbarX.MaxValue = size.X;
-			//this.ScrollbarX.Y = Parent.Size.Y - this.ScrollbarX.Width - 1;
-			//this.ScrollbarX.Height = Parent.Size.X - this.TabList.OuterSize.X - 1;
-
-			//this.ScrollbarY.ValueRange = s.Y;
-			//this.ScrollbarY.MaxValue = size.Y;
-			//this.ScrollbarY.X = Parent.Size.X - this.TabList.OuterSize.X - 1 - this.ScrollbarY.Width;
-			//this.ScrollbarY.Height = Parent.Size.Y;
-
-			//if (s.X > size.X)
-			//	this.TileEditor.X = Meth.Down((s.X - size.X) / 2);
-			//else
-			//	this.TileEditor.X = -this.ScrollbarX.Value;
-
-			//if (s.Y > size.Y)
-			//	this.TileEditor.Y = Meth.Down((s.Y - size.Y) / 2) + 20;
-			//else
-			//	this.TileEditor.Y = -this.ScrollbarY.Value + 20;
-
-			//this.ScrollbarX.Visible = s.X < size.X;
-			//this.ScrollbarY.Visible = s.Y < size.Y;
-
-
-			//this.TileEditor.Position = new Vector(-this.ScrollbarX.Value, 20 - this.ScrollbarY.Value);
-
-
 		}
 
 		public void Exit()
@@ -216,6 +155,7 @@ namespace Mekanik
 			this.Parent.FixedResolution = this.StartFixedResolution;
 			this.Parent.ScaleMode = this.StartScaleMode;
 			this.Parent.MouseLimitedToScreen = this.StartMouseLimitedToScreen;
+			this.Parent.UseMultipleRenderers = this.StartUseMultipleRenderers;
 			//Parent.IgnoreMouseWithoutFocus = this.StartIgnoreMouseWithoutFocus;
 
 			this.OnExit();

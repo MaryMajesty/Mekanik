@@ -28,9 +28,12 @@ namespace Mekanik
 
 		public Animation() { }
 
-		public Animation(AnimationLibrary _library)
+		public Animation(AnimationLibrary _library) { this.Library = _library; }
+
+		public Animation(string _path)
 		{
-			this.Library = _library;
+			this.Library = new AnimationLibrary(_path);
+			this.Play(this.Library.Sources.ToArray()[0].Key);
 		}
 
 		public void Play(string _animation)
@@ -72,25 +75,42 @@ namespace Mekanik
 		{
 			if (this.CurrentSource != null)
 			{
+				if (Meth.Sign(this.TimePassed - 1) != Meth.Sign(this.SpeedModifier))
+					this._Stopped = false;
+
 				if (!this._Stopped)
 				{
 					this.TimePassed += this.SpeedModifier;
-					if (this.TimePassed > this.CurrentSource.Speed * this.CurrentSource.Sprites.Count)
+					if (this.TimePassed > this.CurrentSource.Speed * this.CurrentSource.Sprites.Count || (this.SpeedModifier < 0 && this.TimePassed <= 0))
 					{
 						if (this.CurrentSource.Repeated)
 						{
-							if (this._StopSmooth)
+							if (this.SpeedModifier > 0)
 							{
-								this._StopSmooth = false;
-								this._Stopped = true;
-								this.TimePassed = this.CurrentSource.Speed * this.CurrentSource.Sprites.Count;
+								if (this._StopSmooth)
+								{
+									this._StopSmooth = false;
+									this._Stopped = true;
+									this.TimePassed = this.CurrentSource.Speed * this.CurrentSource.Sprites.Count;
+								}
+								else
+									this.TimePassed %= (this.CurrentSource.Speed * this.CurrentSource.Sprites.Count);
 							}
 							else
-								this.TimePassed %= (this.CurrentSource.Speed * this.CurrentSource.Sprites.Count);
+							{
+								if (this._StopSmooth)
+								{
+									this._StopSmooth = false;
+									this._Stopped = true;
+									this.TimePassed = 0;
+								}
+								else
+									this.TimePassed = (this.TimePassed + (this.CurrentSource.Speed * this.CurrentSource.Sprites.Count)) % (this.CurrentSource.Speed * this.CurrentSource.Sprites.Count);
+							}
 						}
 						else
 						{
-							this.TimePassed = this.CurrentSource.Speed * this.CurrentSource.Sprites.Count;
+							this.TimePassed = (this.SpeedModifier > 0) ? this.CurrentSource.Speed * this.CurrentSource.Sprites.Count : 0;
 							this._Stopped = true;
 							this._StopSmooth = false;
 						}
@@ -106,166 +126,13 @@ namespace Mekanik
 			if (this.CurrentSource != null)
 			{
 				this.Texture = this.CurrentSource.Sprites[this.CurFrame];
-				this.Offset = this.CurrentSource.Offsets[this.CurFrame];
+				Vector off = this.CurrentSource.Offsets[this.CurFrame];
 
 				Vector size = this.CurrentSource.Sprites[this.CurFrame].Size;
-				return new VertexArray(VertexArrayType.Quads) { Vertices = new Bunch<Vertex>(new Vector(0, 0), new Vertex(new Vector(size.X, 0), new Vector(size.X, 0)), new Vertex(size, size), new Vertex(new Vector(0, size.Y), new Vector(0, size.Y))) };
+				return new VertexArray(VertexArrayType.Quads) { Vertices = new Bunch<Vertex>(new Vector(0, 0) + off, new Vertex(new Vector(size.X, 0) + off, new Vector(size.X, 0)), new Vertex(size + off, size), new Vertex(new Vector(0, size.Y) + off, new Vector(0, size.Y))) };
 			}
 			else
 				return new VertexArray(VertexArrayType.Quads);
 		}
 	}
 }
-
-//namespace Mekanik
-//{
-//	public class Animation : Primitive
-//	{
-//		public Dictionary<string, AnimationSource> Animations = new Dictionary<string, AnimationSource>();
-//		public double CurFrame;
-//		public int CurSprite;
-//		public Analog Direction;
-//		public double Speed = 1;
-//		public double StopValue;
-//		public bool UseColliders;
-//		public Nullable<bool> ManualBusy;
-//		//public Dictionary<string, CollisionDelegate> OnCollisions;
-//		private int _PreviousDirection = 1;
-//		private string _CurAnimation;
-//		private bool _Stopped;
-//		private Color _Color = Color.White;
-
-//		public new Color Color
-//		{
-//			get { return _Color; }
-//			set { _Color = value; }
-//		}
-//		public bool IsFinished
-//		{
-//			get { return !Animations[_CurAnimation].Repeated && _Stopped; }
-//		}
-//		public string CurAnimation
-//		{
-//			get { return _CurAnimation; }
-//		}
-//		public bool IsBusy
-//		{
-//			get { return (CurAnimation != null) ? (ManualBusy.HasValue ? ManualBusy.Value : (Animations[CurAnimation].Busy ? (Animations[CurAnimation].ReleaseWhenFinished ? !_Stopped : true) : false)) : false; }
-//		}
-
-//		public Animation(Dictionary<string, AnimationSource> _animations)
-//		{
-//			this.Animations = _animations;
-//		}
-
-//		public void Animate(string _animation, Entity _entity)
-//		{
-//			if (this._CurAnimation != _animation)
-//			{
-//				//this.OnCollisions = new Dictionary<string, CollisionDelegate>();
-
-//				this.ManualBusy = null;
-//				AnimationSource source = this.Animations[_animation];
-
-//				this._CurAnimation = _animation;
-//				if (!source.Reversed)
-//				{
-//					this.CurFrame = 0;
-//					this.CurSprite = 0;
-//				}
-//				else
-//				{
-//					this.CurFrame = source.Frames.Length * source.Speed;
-//					this.CurSprite = source.Frames.Length - 1;
-//				}
-//				this._Stopped = false;
-//			}
-//		}
-
-//		public void Stop()
-//		{
-//			this._Stopped = true;
-//			this.CurFrame = 0;
-//			this.CurSprite = 0;
-//		}
-
-//		public override void Draw(SFML.Graphics.RenderTarget _target, SFML.Graphics.RenderStates _states)
-//		{
-//			if (_CurAnimation != null)
-//			{
-//				AnimationSource source = Animations[_CurAnimation];
-//				Image img = new Image(source.Frames[CurSprite]);
-//				img.Origin = source.Origin;
-//				img.Scale = source.Scale * this.Scale * (source.DirectionTiedToInput ? new Vector(_PreviousDirection, 1) : 1);
-//				img.Position = this.Position + source.Offset * img.Scale;
-//				img.Color = source.Colors[CurSprite] * this.Color;
-//				img.Draw(_target, _states);
-//			}
-//		}
-
-//		public override void Update(Entity _entity)
-//		{
-//			if (!_Stopped)
-//			{
-//				if (_CurAnimation != null)
-//				{
-//					AnimationSource source = Animations[_CurAnimation];
-
-//					if (source.SpeedTiedToInput && Meth.Abs(Direction.Value) < StopValue)
-//						Stop();
-//					else
-//					{
-//						if (source.SpeedTiedToInput && Meth.Abs(Direction.Value) >= StopValue)
-//							this._Stopped = false;
-
-//						if (source.SpeedTiedToInput)
-//						{
-//							if (!_Stopped && Direction.IsDown)
-//								AddFrames(1 * Speed * (source.DirectionTiedToInput ? Meth.Abs(Direction.Value) : Direction.Value) * Meth.Sign(this.Scale.X));
-//						}
-//						else
-//							AddFrames(-1 * (Convert.ToInt32(source.Reversed) * 2 - 1));
-
-//						_PreviousDirection = (this.Direction == null) ? 1 : ((this.Direction.Value == 0) ? _PreviousDirection : Meth.Sign(this.Direction.Value));
-//					}
-
-//					if (this.UseColliders)
-//					{
-//						//_entity.Colliders.Clear();
-//						//foreach (KeyValuePair<string, Bunch<Collider>[]> group in source.Colliders)
-//						//{
-//						//	foreach (Collider c in group.Value[CurSprite])
-//						//	{
-//						//		Collider copy = c * this.Scale;
-//						//		if (OnCollisions.ContainsKey(group.Key))
-//						//			copy.Collided += OnCollisions[group.Key];
-//						//		_entity.Colliders.Add(copy);
-//						//	}
-//						//}
-//					}
-//				}
-//			}
-//		}
-
-//		void AddFrames(double _frames)
-//		{
-//			AnimationSource source = Animations[_CurAnimation];
-
-//			this.CurFrame += _frames;
-//			if (source.Repeated)
-//			{
-//				this.CurFrame = Meth.RMod(this.CurFrame, (source.Speed * source.Frames.Length));
-//				this.CurSprite = Meth.Down(this.CurFrame / source.Speed);
-//			}
-//			else
-//			{
-//				this.CurFrame = Meth.Limit(0, this.CurFrame, source.Frames.Length * source.Speed);
-//				this.CurSprite = Meth.Min(Meth.Down(this.CurFrame / source.Speed), source.Frames.Length - 1);
-//				if (!source.Reversed && this.CurFrame == source.Frames.Length * source.Speed)
-//					this._Stopped = true;
-//				if (source.Reversed && this.CurFrame == 0)
-//					this._Stopped = true;
-//			}
-//		}
-//	}
-//}

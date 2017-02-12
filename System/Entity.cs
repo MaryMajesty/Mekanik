@@ -23,10 +23,10 @@ namespace Mekanik
 		[Editable(_default: "[none]")]public string Identifier;
 		public double Z;
 		public Bunch<Graphic> Graphics = new Bunch<Graphic>();
-		public Bunch<Analog> Analogs = new Bunch<Analog>();
+		//public Bunch<Analog> Analogs = new Bunch<Analog>();
 		public GameBase Parent;
 		public bool Paused;
-		public Analog XAnalog;
+		//public Analog XAnalog;
 		public Bunch<Entity> Parents = new Bunch<Entity>();
 		public bool AttachedToScreen;
 		public Vector Offset;
@@ -54,9 +54,10 @@ namespace Mekanik
 		public ulong _Id;
 		public bool Movable;
 		internal Bunch<FixedMouseJoint> _MouseJoints = new Bunch<FixedMouseJoint>();
-		public Inputs InputsHidden;
 		public Bunch<OverlapArea> OverlapAreas = new Bunch<OverlapArea>();
 		internal Bunch<Sound> _Sounds = new Bunch<Sound>();
+		internal bool _LastPaused;
+		internal Vector? _LastMotion;
 
 		public int? LocalPlayerId;
 		public int? Renderer;
@@ -74,6 +75,26 @@ namespace Mekanik
 
 		#region Properties
 
+		public bool IsVisible
+		{
+			get { return !(!this.Visible || this.Parents.Any(item => !item.Visible)); }
+		}
+		public Dictionary<string, Analog> Controls
+		{
+			get
+			{
+				if (this.LocalPlayerId.HasValue)
+				{
+					Tuple<bool, int> t = this.Parent.GetPlayerInput(this.LocalPlayerId.Value);
+					if (t.Item1)
+						return this.Parent._GamePadControlsInstances[t.Item2];
+					else
+						return this.Parent._Controls[t.Item2];
+				}
+				else
+					throw new Exception("No input detected.");
+			}
+		}
 		internal Entity _CarriedBy;
 		public Entity CarriedBy
 		{
@@ -206,28 +227,6 @@ namespace Mekanik
 		{
 			get { return this._IsDead; }
 		}
-		//private Controls _Controls = new Controls();
-		//public Controls Controls
-		//{
-		//	get { return this._Controls; }
-		//}
-		private Controls _Controls;
-		public Controls Controls
-		{
-			get
-			{
-				if (this.LocalPlayerId.HasValue)
-					return this.Parent.LocalPlayerControls[this.LocalPlayerId.Value];
-				else if (this.PlayerId.HasValue)
-					return this.Parent.OnlinePlayerControls[this.PlayerId.Value];
-				else
-				{
-					if (this._Controls == null)
-						this._Controls = new Controls();
-					return this._Controls;
-				}
-			}
-		}
 		private Collider _GroundSensor;
 		public Collider GroundSensor
 		{
@@ -263,7 +262,7 @@ namespace Mekanik
 			get
 			{
 				return this.IsAttachedToScreen
-					? Parent.MousePositionRaw - this._RealPosition
+					? (Parent.MousePositionRaw - this._RealPosition) / this._RealScale
 					: (Parent.MousePosition - this._RealPosition) / this._RealScale;// * (this.IsZoomable ? 1 : Parent.RealZoom * this._RealScale);
 			}
 		}
@@ -336,7 +335,18 @@ namespace Mekanik
 		internal Vector _Motion;
 		public Vector Motion
 		{
-			get { return (this.Physical && this._CarriedBy == null) ? (Vector)this._Body.LinearVelocity : this._Motion; }
+			get
+			{
+				if (this.IsPaused && this._LastMotion.HasValue)
+					return this._LastMotion.Value;
+				else
+				{
+					if (this.Physical && this._CarriedBy == null)
+						return (Vector)this._Body.LinearVelocity;
+					else
+						return this._Motion;
+				}
+			}
 			
 			set
 			{
@@ -577,44 +587,8 @@ namespace Mekanik
 				foreach (MouseArea m in this._MouseAreas)
 					m.Rebind();
 			}
-
-			//foreach (Entity c in this.Children)
-			//	c._UpdateScale();
 		}
-
-		//public void PlaySound(SoundSource _sound)
-		//{
-			//Parent.PlaySound(_sound, this.Position - Parent.Camera);
-		//}
-
-		//public Connection Connect(Entity _entity, Vector _pos0, Vector _pos1)
-		//{
-		//	RevoluteJoint j = new RevoluteJoint(this._Body, _entity._Body, _pos0, _pos1);
-		//	j.CollideConnected = true;
-		//	//j.LimitEnabled = true;
-		//	//j.LowerLimit = (float)(Meth.Tau / -32);
-		//	//j.UpperLimit = (float)(Meth.Tau / 32);
-		//	this.Parent._World.AddJoint(j);
-
-		//	return new Connection(this.Parent._World, j, this, _entity);
-		//}
-
-		//public Connection ConnectAlt(Entity _entity, Vector _pos0, Vector _pos1, Vector _axis)
-		//{
-		//	PrismaticJoint j = new PrismaticJoint(this._Body, _entity._Body, _pos0, _pos1, _axis);
-		//	j.ReferenceAngle = (float)(0);
-		//	j.CollideConnected = true;
-
-		//	this.Parent._World.AddJoint(j);
-
-		//	return new Connection(this.Parent._World, j, this, _entity);
-		//}
-
-		//public void LoadScript(Script _script)
-		//{
-		//	this.MekaComp = new MekaComp(this, _script);
-		//}
-
+		
 		public void ExecuteScript(Script _script, bool _includeentities, params Variable[] _vars)
 		{
 			Bunch<Variable> vars = new Bunch<Variable>(this._WrappedThis, Misc.Mekanik);
@@ -634,13 +608,7 @@ namespace Mekanik
 			p.Start(new Permissions(Permission.DllUsage), vars);
 			this._Programs.Add(p);
 		}
-
-		//public void Connect(Vector _pos)
-		//{
-		//	JointFactory.CreateRevoluteJoint(
-		//	this.Parent._World.AddJoint(j);
-		//}
-
+		
 		internal Bunch<Graphic> _GetGraphics()
 		{
 			if (!this.Visible)
@@ -652,57 +620,17 @@ namespace Mekanik
 
 				foreach (Graphic g in this.Graphics)
 					g._Set(this);
+				
+				Bunch<Graphic> @out = this.Graphics.Where(item => item.Visible);
+				Bunch<Graphic> ns = new Bunch<Graphic>();
 
-				//if (this.RenderIntermediately)
-				//{
-				//	Bunch<Graphic> @out = this.RenderGraphicsIntermediately ? new Bunch<Graphic>() : this.Graphics.Clone();
-				//	Bunch<Graphic> gs = this.RenderGraphicsIntermediately ? this.Graphics.Clone() : new Bunch<Graphic>();
+				foreach (Entity c in this.Children)
+					@out.Add(c._GetGraphics());
 
-				//	if (this.Renderer.HasValue)
-				//	{
-				//		foreach (Graphic g in @out)
-				//			g.Renderer = this.Renderer.Value;
-				//	}
+				foreach (Graphic g in @out)
+					this._UpdateGraphic(g);
 
-				//	foreach (Entity c in this.Children)
-				//		gs.Add(c._GetGraphics());
-
-				//	foreach (Graphic g in @out)
-				//		this._UpdateGraphic(g);
-
-				//	//if (this.AlwaysUpdateIntermediate || this.UpdateIntermediate)
-				//	//{
-				//	//	this.UpdateIntermediate = false;
-
-				//	//	this._IntermediateTexture.Clear(Color.Transparent);
-				//	//	foreach (Graphic g in gs.OrderBy(item => item.Z))
-				//	//	{
-				//	//		g.Position -= this._IntermediatePosition;
-				//	//		g.Draw(this._IntermediateTexture);
-				//	//	}
-				//	//	this._IntermediateTexture.Display();
-				//	//}
-
-				//	////this._RenderArray.Texture = new ImageSource(this._RenderTexture.Texture);
-				//	//this._IntermediateArray.Z = this.Z;
-				//	//this._IntermediateArray.Scale = this.Scale;
-				//	//this._IntermediateArray.Position = this.Position + this._IntermediatePosition;
-
-				//	//@out.Add(this._IntermediateArray);
-				//	return @out;
-				//}
-				//else
-				{
-					Bunch<Graphic> @out = this.Graphics.Where(item => item.Visible);
-
-					foreach (Entity c in this.Children)
-						@out.Add(c._GetGraphics());
-
-					foreach (Graphic g in @out)
-						this._UpdateGraphic(g);
-
-					return @out;
-				}
+				return @out;
 			}
 		}
 

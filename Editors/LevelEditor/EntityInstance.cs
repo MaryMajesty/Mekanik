@@ -26,5 +26,15 @@ namespace Mekanik
 			foreach (MekaItem s in _item["Properties"].Children)
 				this.Properties[s.Name] = s.Content;
 		}
+
+		internal MekaItem _Export()
+		{
+			MekaItem @out = new MekaItem(this.Type, new List<MekaItem>());
+			@out.Children.Add(new MekaItem("X", this.X.ToString()));
+			@out.Children.Add(new MekaItem("Y", this.Y.ToString()));
+			@out.Children.Add(new MekaItem("Z", this.Z.ToString()));
+			@out.Children.Add(new MekaItem("Properties", this.Properties.Select(item => new MekaItem(item.Key, item.Value)).ToList()));
+			return @out;
+		}
 	}
 }

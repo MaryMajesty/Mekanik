@@ -45,10 +45,10 @@ namespace Mekanik
 
 			this._Platform = _platform;
 
-			this._CreateAudioContext();
+			//this._CreateAudioContext();
 			
 			this.Node = new Node(this);
-			this.LevelBank = new RegionBank(this);
+			this.LevelBank = new LevelBank(this);
 			
 			this._IsGame = _isgame;
 			if (!_isgame)
@@ -75,29 +75,19 @@ namespace Mekanik
 			this.SoundVolumeHalfLife = Meth.Root(this.Resolution.X * this.Resolution.Y) / 2;
 		}
 
-		private void _CreateAudioContext()
-		{
-			IntPtr d = OpenTK.Audio.OpenAL.Alc.OpenDevice(OpenTK.Audio.AudioContext.DefaultDevice);
-			OpenTK.ContextHandle c = OpenTK.Audio.OpenAL.Alc.CreateContext(d, new int[0]);
-			OpenTK.Audio.OpenAL.Alc.MakeContextCurrent(c);
-			
-			AL.Listener(ALListener3f.Position, 0, 0, 0);
-			AL.Listener(ALListener3f.Velocity, 0, 0, 0);
-			float[] vs = new float[] { 0, 0, -1, 0, 1, 0 };
-			AL.Listener(ALListenerfv.Orientation, ref vs);
-		}
-
 		protected void _Initialize()
 		{
 			if (this.FixedResolution)
 				this._RendererPixel = new Renderer(this.Resolution.X, this.Resolution.Y);
 			this._RendererOutput = new Renderer(this.Resolution.X, this.Resolution.Y, _rendertowindow: true);
 
-			this._DebugOverlay = new Label("") { CharSize = 18, TextColor = Color.White, /*RenderIntermediately = true, RenderGraphicsIntermediately = true, IntermediateSize = new Point(1, 1), IntermediateShader = null,*/ Edge = 5 };
-			this._IndicationOverlay = new Label("") { CharSize = 16, /*RenderIntermediately = true, RenderGraphicsIntermediately = true, IntermediateSize = new Point(1, 1), IntermediateShader = null,*/ Edge = 5 };
-			
+			this._DebugOverlay = new Label("") { CharSize = 16, TextColor = Color.White, /*RenderIntermediately = true, RenderGraphicsIntermediately = true, IntermediateSize = new Point(1, 1), IntermediateShader = null,*/ Edge = 5 };
+			this._DebugOverlay.Shader = Shader.TextOutline;
+			this._DebugOverlay.Shader["Color"] = Color.Black;
 			this._DebugOverlay.Parent = this;
 			this._DebugOverlay.OnInitialization();
+
+			this._IndicationOverlay = new Label("") { CharSize = 16, /*RenderIntermediately = true, RenderGraphicsIntermediately = true, IntermediateSize = new Point(1, 1), IntermediateShader = null,*/ Edge = 5 };
 		}
 
 		internal void _Americanize()
@@ -134,12 +124,12 @@ namespace Mekanik
 
 		public virtual void OnClose() { }
 
+		public virtual void Close() { }
+
 		#endregion
 
 		#region Settings
-
-		public readonly Keymap DefaultKeymap = new Keymap();
-		public readonly Keymap Keymap = new Keymap();
+		
 		public readonly MekaItem DefaultSettings = new MekaItem(null, new List<MekaItem>());
 		public readonly MekaItem Settings = new MekaItem(null, new List<MekaItem>());
 
@@ -155,6 +145,9 @@ namespace Mekanik
 		{
 			List<MekaItem> @out = new List<MekaItem>();
 			@out.Add(new MekaItem("ScaleMode", this._IsGame ? "FixedRatio" : "None"));
+			@out.Add(new MekaItem("Volume Master", "1"));
+			@out.Add(new MekaItem("Volume Sounds", "1"));
+			@out.Add(new MekaItem("Volume Music", "1"));
 			return @out;
 		}
 
@@ -162,12 +155,18 @@ namespace Mekanik
 		{
 			List<MekaItem> @out = new List<MekaItem>();
 			@out.Add(new MekaItem("ScaleMode", (this._LevelEditor != null ? this._LevelEditor.StartScaleMode.ToString() : this.ScaleMode.ToString())));
+			@out.Add(new MekaItem("Volume Master", this._VolumeMaster.ToString()));
+			@out.Add(new MekaItem("Volume Sounds", this._VolumeSounds.ToString()));
+			@out.Add(new MekaItem("Volume Music", this._VolumeMusic.ToString()));
 			return @out;
 		}
 
 		private void _SetEngineSettings(MekaItem _settings)
 		{
 			this.ScaleMode = (ScaleMode)ScaleMode.Parse(typeof(ScaleMode), _settings["ScaleMode"].Content);
+			this.VolumeMaster = _settings["Volume Master"].Content.To<double>();
+			this.VolumeSounds = _settings["Volume Sounds"].Content.To<double>();
+			this.VolumeMusic = _settings["Volume Music"].Content.To<double>();
 		}
 
 		private void _CreateSettings()
@@ -212,8 +211,6 @@ namespace Mekanik
 		public int LocalPlayerCount = 1;
 		public Bunch<int> LocalPlayerIds = new Bunch<int>();
 		public Bunch<int> OnlinePlayerIds = new Bunch<int>();
-		public Sandbox<int, Controls> LocalPlayerControls = new Sandbox<int, Controls>();
-		public Sandbox<int, Controls> OnlinePlayerControls = new Sandbox<int, Controls>();
 
 		protected void _Sync()
 		{
@@ -267,27 +264,32 @@ namespace Mekanik
 		public double Rotation;
 		public double Zoom = 0;
 		public double ZoomSpeed = 3;
-		public bool FixedResolution;
 		protected bool _RenderSync;
 		protected bool? _RenderSyncLock;
 		public bool AutoRegulateRenderSync = true;
 		protected bool _ScreenshotRequested;
+		public bool FixedResolution;
 
 		protected Point _Resolution;
 		public Point Resolution
 		{
 			get { return this._Resolution; }
 		}
-
 		protected int _AntiAlias;
 		public int AntiAlias
 		{
 			get { return this._AntiAlias; }
 		}
-
 		public double RealZoom
 		{
 			get { return Meth.Pow(this.ZoomSpeed, Zoom); }
+		}
+		protected virtual bool _GetFullscreen() { return false; }
+		protected virtual void _SetFullscreen(bool _value) { }
+		public bool Fullscreen
+		{
+			get { return this._GetFullscreen(); }
+			set { this._SetFullscreen(value); }
 		}
 
 
@@ -392,13 +394,13 @@ namespace Mekanik
 			for (int i = 0; i < 2; i++)
 			{
 				Bunch<Graphic> graphics = new Bunch<Graphic>();
-				foreach (Entity entity in this.Entities.Where(item => (i == 0) ? !item.Interfacial : item.Interfacial))
+				foreach (Entity entity in this.Entities.Where(item => item.IsVisible && ((i == 0) ? !(item.Interfacial || item.IsAttachedToScreen) : (item.Interfacial || item.IsAttachedToScreen))))
 					graphics.Add(entity._GetGraphics());
 				foreach (Graphic g in graphics.Where(item => item.Visible && !item.Disposed && item.Color.A > 0 && (item.Scale.X != 0 || item.Scale.Y != 0)).OrderBy(item => item.Z))
 				{
 					if (i == 0)
 					{
-						g.Position = (g.Position - (Point)this.Camera + this._CameraShakeOffset) * this.RealZoom + this.Resolution / 2;
+						g.Position = (g.Position - ((Point)this.Camera + this._CameraShakeOffset)) * this.RealZoom + this.Resolution / 2;
 						g.Scale *= this.RealZoom;
 					}
 
@@ -464,7 +466,7 @@ namespace Mekanik
 				if (!File.Exists(this.Path + "\\Screenshots"))
 					File.CreateFolder(this.Path + "\\Screenshots");
 
-				(this.FixedResolution ? this._RendererPixel.ImageSource : this._RendererOutput.ImageSource).SaveRgb(this.GetSaveName(this.Path + "\\Screenshots\\", "png"));
+				(this.FixedResolution ? this._RendererPixel.ImageSource : this._RendererOutput.ImageSource).Save(this.GetSaveName(this.Path + "\\Screenshots\\", "png"));
 				this._ScreenshotRequested = false;
 			}
 
@@ -478,10 +480,49 @@ namespace Mekanik
 					this._RecordedFrames.Add(img.PixelBytes);
 					img.Dispose();
 				}
-				//this._RecordedFrames.Add((this.FixedResolution ? this._RendererPixel.ImageSource : this._RendererOutput.ImageSource).PixelBytes);
-				//this._ConvertedFrames.Add((this.FixedResolution ? this._RendererPixel.ImageSource : this._RendererOutput.ImageSource).ToBitmap().GetBytes(System.Drawing.Imaging.ImageFormat.Gif));
-				//this.DoRecord();
 				this._FrameCount++;
+			}
+
+			if (this._ShowEntityPositions)
+			{
+				if (this._EntityPositionText == null)
+				{
+					this._EntityPositionText = new Text(FontBase.Consolas) { Shader = Shader.TextOutline, BlendMode = BlendMode.None };
+					this._EntityPositionCross = new VertexArray(VertexArrayType.Lines) { Color = Color.Black };
+					this._EntityPositionCross.Vertices.Add(new Vector(-5, 0), new Vector(5, 0), new Vector(0, -5), new Vector(0, 5));
+				}
+
+				foreach (Entity e in this.RealEntities)
+				{
+					string n = e.GetType().Name;
+					if (!this._EntityPositionImages.ContainsKey(n))
+					{
+						this._EntityPositionText.Content = n;
+						Renderer r = new Renderer(this._EntityPositionText.Size);
+						r.Draw(this._EntityPositionText);
+						this._EntityPositionImages[n] = r.ImageSource.Clone();
+						r.Dispose();
+					}
+
+					Image img = new Image(this._EntityPositionImages[n]) { Origin = new Vector(0.5, 1) };
+
+					img.Position = e.RealPosition;
+
+					if (!e.IsAttachedToScreen)
+						img.Position = (img.Position - (Point)this.Camera + this._CameraShakeOffset) * this.RealZoom + this.Resolution / 2;
+
+					img.Position *= this._GetScreenScale();
+					img.Position += this._GetScreenPosition();
+
+					img.Position += new Vector(0.00000001 * Meth.Sign(img.Scale.X), 0.00000001 * Meth.Sign(img.Scale.Y));
+
+					img.Position = (Point)img.Position;
+
+					this._EntityPositionCross.Position = img.Position;
+
+					this._RendererOutput.Draw(img);
+					this._RendererOutput.Draw(this._EntityPositionCross);
+				}
 			}
 
 			if (this._DebugOverlayVisible)
@@ -492,6 +533,10 @@ namespace Mekanik
 
 			this._AfterRender();
 		}
+
+		private Text _EntityPositionText;
+		private VertexArray _EntityPositionCross;
+		private Dictionary<string, ImageSource> _EntityPositionImages = new Dictionary<string, ImageSource>();
 
 		public virtual void FinalDraw(Renderer _output, Renderer[] _layers)
 		{
@@ -574,16 +619,11 @@ namespace Mekanik
 
 		#region Physics
 
-		protected internal World _World = new World(new Vector(0, 1024));
+		protected internal World _World = new World(new Vector(0, 0));
 		protected World _InterfaceWorld = new World(new Vector(0, 0));
 		public double PhysicsSpeed = 1;
 		public static double Meter = 32;
-
-		public Vector Gravity
-		{
-			get { return this._World.Gravity; }
-			set { this._World.Gravity = value; }
-		}
+		public Vector Gravity = new Vector(0, 1000);
 
 		public MouseArea GetMouseAreaAt(Vector _pos)
 		{
@@ -696,8 +736,8 @@ namespace Mekanik
 					entity._Added = true;
 					entity.Parent = this;
 					entity.Parents = _parents;
-					foreach (Analog analog in entity.Analogs)
-						analog._Entity = entity;
+					//foreach (Analog analog in entity.Analogs)
+					//	analog._Entity = entity;
 
 					this._RealEntities.Add(entity);
 					if (!entity._Initialized)
@@ -719,12 +759,12 @@ namespace Mekanik
 
 					if (!entity._Initialized)
 					{
-						if (this.Inputs != null)
-						{
-							entity.InputsHidden = (Inputs)this.Inputs.GetType().GetConstructor(new Type[0]).Invoke(new object[0]);
-							entity.InputsHidden._Entity = entity;
-							entity.InputsHidden._Initialize();
-						}
+						//if (this.Inputs != null)
+						//{
+						//	entity.InputsHidden = (Inputs)this.Inputs.GetType().GetConstructor(new Type[0]).Invoke(new object[0]);
+						//	entity.InputsHidden._Entity = entity;
+						//	entity.InputsHidden._Initialize();
+						//}
 
 						entity._Initialized = true;
 						entity.OnInitialization();
@@ -793,14 +833,14 @@ namespace Mekanik
 
 		#region Editor
 
-		public Point Tilesize;
+		public Point TileSize;
 		public Bunch<Type> EntityTypes = new Bunch<Type>(typeof(Decoration));
 		public string LevelFolder;
 		public string AreasetFolder;
 		public Dictionary<string, Areaset> Areasets = new Dictionary<string, Areaset>();
 		internal LevelEditor _LevelEditor;
-		public RegionBank LevelBank;
-		public Point TileCollisionResolution = new Point(2, 2);
+		public LevelBank LevelBank;
+		public Point TileCollisionResolution = new Point(1, 1);
 
 		internal bool _TestStarted;
 		public bool TestStarted
@@ -809,6 +849,7 @@ namespace Mekanik
 		}
 
 		public virtual void StartTest(LevelSource _source, string _path, string _entrance) { }
+		public virtual void OnTestStop() { }
 
 		public void StopTest()
 		{
@@ -828,6 +869,7 @@ namespace Mekanik
 			this.Zoom = 0;
 
 			this._TestStarted = false;
+			this.OnTestStop();
 		}
 
 		#endregion
@@ -878,6 +920,7 @@ namespace Mekanik
 		protected Point _CameraShakeOffset;
 		protected bool _CameraShakeActive;
 		protected int _CameraShakeCooldown;
+		private int _CameraPauseCooldown;
 
 		public Entity CameraFocus
 		{
@@ -888,13 +931,16 @@ namespace Mekanik
 				if (this._CameraFocus != value)
 				{
 					this._CameraFocus = value;
-					//if (value != null)
-					//{
-					//	value._UpdateRealPosition();
-					//	this.Camera = value.RealPosition - new Vector(0, this.Resolution.Y * (this.CameraY - 0.5));
-					//}
+					if (value != null)
+						value._UpdateRealPosition();
 				}
 			}
+		}
+
+		public void ResetCamera()
+		{
+			this._CameraFocus._UpdateRealPosition();
+			this.Camera = this._CameraFocus.RealPosition - new Vector(0, this.Resolution.Y * (this.CameraY - 0.5));
 		}
 
 		public void ZoomAt(Vector _position, double _zoom)
@@ -935,8 +981,13 @@ namespace Mekanik
 
 		private void _UpdateCamera()
 		{
-			if (this.CameraFocus != null)
+			if (this.CameraFocus != null && (!this.CameraFocus.IsPaused || this._CameraPauseCooldown > 0))
 			{
+				if (this.CameraFocus.IsPaused)
+					this._CameraPauseCooldown = 0;
+				else
+					this._CameraPauseCooldown = 1;
+
 				Vector target = this.Camera;
 
 				if (this.CameraFocus.RealPosition.X - this.Camera.X < -this.CameraThreshold.X)
@@ -957,7 +1008,10 @@ namespace Mekanik
 				Vector c = this.Camera;
 
 				bool b = false;
-				Vector off = (target - this.Camera) * this.CameraSpeed * new Vector(1, target.Y > this.Camera.Y ? this.CameraFallFactor : 1);
+				Vector coff = (target - this.Camera);
+				if ((!this.CameraFocus.IsOnGround && Meth.Abs(coff.Y) < 5) || Meth.Abs(coff.Y) < 3)
+					coff.Y = 0;
+				Vector off = coff * this.CameraSpeed * new Vector(1, target.Y > this.Camera.Y ? this.CameraFallFactor : 1);
 				if (Meth.Abs(off.X) > this.CameraFixThreshold)
 				{
 					double m = this.CameraFocus.ActualMotion.X / 60;
@@ -975,7 +1029,7 @@ namespace Mekanik
 
 				if (!this.CameraPixelCheatX && Meth.Abs(this.Camera.X + off.X - Meth.Sign(off.X) - target.X) < 1)
 					off.X = target.X - this.Camera.X;
-				if (!this.CameraPixelCheatY && Meth.Abs(this.Camera.Y + off.Y - Meth.Sign(off.Y) - target.Y) < 1)
+				if (!this.CameraPixelCheatY && Meth.Abs(this.Camera.Y + off.Y - Meth.Sign(off.Y) - target.Y) < 1 && !((!this.CameraFocus.IsOnGround && Meth.Abs(coff.Y) < 5) || Meth.Abs(coff.Y) < 3))
 					off.Y = target.Y - this.Camera.Y;
 
 				this.Camera += off;
@@ -1024,29 +1078,23 @@ namespace Mekanik
 			}
 		}
 
-		protected int _DebugPageMax = 3;
+		protected int _DebugPageMax = 4;
 		private PerformanceCounter _PerformanceCounter;
-		private bool _GettingPerformanceCounter;
-		private int _LastRam;
+		private bool _RamDiagnosticsEnabled = false;
+		private string _LastRam = "unknown";
+		private bool _ShowEntityPositions;
 
-		private string _GetDebugText()
+		public void DoDebugAction()
 		{
-			Bunch<string> @out = new Bunch<string>();
-
 			if (this._DebugPage == 0)
+				this._ShowEntityPositions = !this._ShowEntityPositions;
+			else if (this._DebugPage == 1)
 			{
-				@out.Add("(1/3) Performance:");
-				@out.Add("");
-				@out.Add("UPS: " + this.Ups.ToString());
-				@out.Add("FPS: " + this.Fps.ToString());
-				@out.Add("RenderSync: " + this._RenderSync.ToString());
-				@out.Add("");
-
-				if (!this._GettingPerformanceCounter)
+				if (!this._RamDiagnosticsEnabled)
 				{
-					this._GettingPerformanceCounter = true;
-
-					Thread t = new Thread(() =>
+					this._RamDiagnosticsEnabled = true;
+					this._LastRam = "[Loading...]";
+					this.Clock.Add(3, () =>
 						{
 							Process proc = Process.GetCurrentProcess();
 
@@ -1054,14 +1102,28 @@ namespace Mekanik
 							this._PerformanceCounter.CategoryName = "Process";
 							this._PerformanceCounter.CounterName = "Working Set - Private";
 							this._PerformanceCounter.InstanceName = proc.ProcessName;
+
+							this._LastRam = Meth.Up(this._PerformanceCounter.NextValue() / 1000).ToString("N0") + "MB";
 						});
-					t.Start();
 				}
+			}
+		}
 
-				if (this._PerformanceCounter != null && this.Runtime % 10 == 0)
-					this._LastRam = (int)(this._PerformanceCounter.NextValue() / 1000);
-				@out.Add("RAM: " + this._LastRam.ToString("N0") + " MB");
+		private string _GetDebugText()
+		{
+			Bunch<string> @out = new Bunch<string>();
 
+			if (this._DebugPage == 0)
+			{
+				@out.Add("(1/4) Graphics:");
+				@out.Add("");
+				@out.Add("UPS: " + this.Ups.ToString());
+				@out.Add("FPS: " + this.Fps.ToString());
+				@out.Add("");
+				@out.Add("RenderSync: " + this._RenderSync.ToString());
+				@out.Add("");
+				@out.Add("[Press F1 to toggle]");
+				@out.Add("Show entity positions: " + this._ShowEntityPositions.ToString());
 				@out.Add("");
 				@out.Add("Graphics: ");
 				foreach (KeyValuePair<string, int> gs in this._RenderedGraphics)
@@ -1069,14 +1131,52 @@ namespace Mekanik
 			}
 			else if (this._DebugPage == 1)
 			{
-				@out.Add("(2/3) Inputs:");
+				@out.Add("(2/4) Performance:");
 				@out.Add("");
-				foreach (GamePad g in GamePad.GetConnectedGamePads())
-					@out.Add(g.Id.ToString() + ": " + g.Name);
+
+				@out.Add("UPS: " + this.Ups.ToString());
+				@out.Add("FPS: " + this.Fps.ToString());
+				@out.Add("");
+
+				if (!this._RamDiagnosticsEnabled)
+					@out.Add("[Press F1 for RAM diagnostics]");
+				if (this._RamDiagnosticsEnabled && this.Runtime % 60 == 0)
+					this._LastRam = Meth.Up(this._PerformanceCounter.NextValue() / 1000).ToString("N0") + " MB";
+				@out.Add("RAM: " + this._LastRam);
+
+				int count = 0;
+				int areas = 0;
+				Bunch<Entity> physicals = new Bunch<Entity>();
+				Bunch<Entity> interfacials = new Bunch<Entity>();
+				foreach (Entity e in this._RealEntities)
+				{
+					count++;
+					areas += e.OverlapAreas.Count;
+					if (e.Physical)
+						physicals.Add(e);
+					if (e.Interfacial)
+						interfacials.Add(e);
+				}
+				
+				@out.Add("");
+				@out.Add("Entities: " + count.ToString());
+				@out.Add("Physicals: " + physicals.Count.ToString());
+				@out.Add("Interfacials: " + interfacials.Count.ToString());
+				@out.Add("");
+				@out.Add("Colliders: " + physicals.Sum(item => item._Colliders.Count).ToString());
+				@out.Add("MouseAreas: " + interfacials.Sum(item => item._MouseAreas.Count).ToString());
+				@out.Add("OverlapAreas: " + areas.ToString());
 			}
 			else if (this._DebugPage == 2)
 			{
-				@out.Add("(3/3) Network:");
+				@out.Add("(3/4) Inputs:");
+				@out.Add("");
+				foreach (GamePad g in GamePad.GetConnectedGamePads(this))
+					@out.Add(g.Id.ToString() + ": " + g.Name);
+			}
+			else if (this._DebugPage == 3)
+			{
+				@out.Add("(4/4) Network:");
 				@out.Add("");
 
 				Func<User, string> usertostring = u =>
@@ -1134,12 +1234,12 @@ namespace Mekanik
 
 			this.UpdateEvents();
 			this.Update();
-			this._FinishEvents();
+			//this._FinishEvents();
 
 			double time = (DateTime.Now - start).TotalMilliseconds;
 
 			if (this.AutoRegulateRenderSync && !this._RenderSyncLock.HasValue)
-				this._RenderSync = time < 20;
+				this._RenderSync = time < 20 && this.Ups > 55 && this.Fps > 55;
 		}
 
 		public void DoFrame()
@@ -1261,19 +1361,39 @@ namespace Mekanik
 
 			foreach (Entity entity in this._RealEntities.Where(item => item._IsMoved))
 			{
-				if (entity.Movable/* || Debug.AllMovable*/)
+				if (entity.Movable)
 				{
 					foreach (FixedMouseJoint j in entity._MouseJoints)
 						j.WorldAnchorB = MousePosition;
 				}
 			}
-
-			foreach (Entity entity in RealEntities.Where(item => !item.Physical && item.Motion != 0))
+			
+			foreach (Entity entity in this.RealEntities.Where(item => !item.Physical && item.Motion != 0 && !item.IsPaused))
 			{
 				entity.Motion += this.Gravity / 60 * entity.GravityFactor;
 				entity.Position += entity.Motion / 60;
 				entity.Motion *= entity.MotionDecay;
 				entity._UpdateRealPosition();
+			}
+			foreach (Entity entity in this.RealEntities.Where(item => item.Physical && !item.IsPaused))
+			{
+				if (entity._LastPaused == true)
+				{
+					entity._LastPaused = false;
+					entity.Motion = entity._LastMotion.Value;
+				}
+				entity._LastMotion = null;
+
+				entity.Motion += this.Gravity / 60 * entity.GravityFactor;
+			}
+			foreach (Entity entity in this.RealEntities.Where(item => item.Physical && item.IsPaused))
+			{
+				if (entity._LastPaused == false)
+				{
+					entity._LastPaused = true;
+					entity._LastMotion = entity.Motion;
+				}
+				entity.Motion = 0;
 			}
 
 			while (this._UserIds.Count > 0)
@@ -1302,16 +1422,28 @@ namespace Mekanik
 
 			this._UpdateOverlapAreas();
 
+			this._GamePads = GamePad.GetConnectedGamePads(this);
+			if (this.LocalPlayerCount == 1 && this._GamePadControls.Count > 0)
+			{
+				foreach (GamePad gp in this._GamePads)
+				{
+					if (gp.Inputs0D.Any(item => item.Value) || gp.Inputs1D.Any(item => item.Value > 0.1 && Meth.Abs(item.Value - 0.5) > 0.1) || gp.Inputs2D.Any(item => item.Value.Length > 0.1))
+						this._PlayerInputs[0] = new Tuple<bool, int>(true, gp.Id);
+				}
+			}
+
+			foreach (Analog a in this._GetAnalogs())
+				a._Update();
+
 			this.OnUpdate();
 
-			foreach (Entity entity in this._RealEntities.ToArray())
+			foreach (Entity entity in this._RealEntities.Where(item => !item.IsPaused))
 			{
-				if (entity.InputsHidden != null)
-					entity.InputsHidden._Update();
 				if (!entity.PlayerId.HasValue && entity.AiAllowed)
 					entity.OnAi();
 				entity.Update();
 				entity._UpdateRealPosition();
+				entity.Runtime++;
 			}
 
 			foreach (Entity entity in this._RealEntities.ToArray())
@@ -1319,7 +1451,10 @@ namespace Mekanik
 				foreach (Sound s in entity._Sounds.ToArray())
 				{
 					if (!s._ToBePlayed && s.IsFinished)
+					{
 						entity._Sounds.Remove(s);
+						s.Dispose();
+					}
 					else
 					{
 						Vector p = entity.RealPosition - this.Camera;
@@ -1337,8 +1472,8 @@ namespace Mekanik
 				}
 			}
 
-			foreach (Entity entity in this.RealEntities)
-				entity.Runtime++;
+			//foreach (Entity entity in this.RealEntities)
+			//	entity.Runtime++;
 
 			foreach (Entity entity in this.RealEntities.Where(item => item._CarriedBy == null && item._Carrying.Count > 0))
 			{
@@ -1350,7 +1485,7 @@ namespace Mekanik
 			foreach (Entity entity in this.RealEntities.Where(item => item.Physical))
 				entity._Position = entity._Body.Position;
 
-			foreach (Entity entity in this.RealEntities)
+			foreach (Entity entity in this.RealEntities.Where(item => !item.IsPaused))
 			{
 				foreach (Graphic g in entity.Graphics)
 					g.Update();
@@ -1362,19 +1497,42 @@ namespace Mekanik
 			this._UpdateCamera();
 		}
 
-		private void _FinishEvents()
-		{
-			foreach (KeyValuePair<int, Controls> c in this.LocalPlayerControls)
-				c.Value._Update();
-			foreach (KeyValuePair<int, Controls> c in this.OnlinePlayerControls)
-				c.Value._Update();
-		}
+		//private void _FinishEvents()
+		//{
+		//	foreach (KeyValuePair<int, Controls> c in this.LocalPlayerControls)
+		//		c.Value._Update();
+		//	foreach (KeyValuePair<int, Controls> c in this.OnlinePlayerControls)
+		//		c.Value._Update();
+		//}
 
 		#endregion
-
+		
 		#region Input
+		
+		internal Sandbox<int, Dictionary<string, Analog>> _Controls = new Sandbox<int, Dictionary<string, Analog>>();
+		internal Dictionary<string, Analog> _GamePadControls = new Dictionary<string, Analog>();
+		internal Dictionary<int, Dictionary<string, Analog>> _GamePadControlsInstances = new Dictionary<int, Dictionary<string, Analog>>();
+		private Bunch<GamePad> _GamePads = new Bunch<GamePad>();
+		private Dictionary<int, Tuple<bool, int>> _PlayerInputs = new Dictionary<int, Tuple<bool, int>>();
+		private int _LocalPlayerIdsTaken;
 
-		public Inputs Inputs;
+		public Tuple<bool, int> GetPlayerInput(int _id)
+		{
+			if (!this._PlayerInputs.ContainsKey(_id))
+			{
+				this._PlayerInputs[_id] = new Tuple<bool, int>(false, this._LocalPlayerIdsTaken);
+				this._LocalPlayerIdsTaken++;
+			}
+			return this._PlayerInputs[_id];
+		}
+
+		public void AddControls(int _localplayerid, string _name, Analog _analog)
+		{
+			this._Controls[_localplayerid][_name] = _analog;
+			_analog._KeyDict = this._KeysPressed;
+		}
+
+		public void AddGamePadControls(string _name, Analog _analog) => this._GamePadControls[_name] = _analog;
 		
 		protected virtual Point _GetMousePositionRaw() { throw new Exception("Mouse not implemented yet."); }
 
@@ -1429,9 +1587,8 @@ namespace Mekanik
 				{
 					if (!(_key == Key.MouseDown || _key == Key.MouseUp))
 						m._ClickedKey = _key;
-
-					if (m.OnClick != null)
-						m.OnClick(_key);
+					
+					m.OnClick?.Invoke(_key);
 
 					if (m.Draggable && m.DragKey == _key)
 					{
@@ -1480,36 +1637,64 @@ namespace Mekanik
 				}
 			}
 
-			if (this.Keymap.Contains(_key))
-			{
-				KeyInfo info = this.Keymap.GetInfo(_key);
-				if (info.LocalId < this.LocalPlayerCount)
-				{
-					if (this.LocalPlayerControls[info.LocalId][info.Name].IsPressed != _pressed)
-					{
-						this._PressKey(info.Name, info.LocalId, _pressed, _once, _local: true);
+			//if (this.Keymap.Contains(_key))
+			//{
+			//	KeyInfo info = this.Keymap.GetInfo(_key);
+			//	if (info.LocalId < this.LocalPlayerCount)
+			//	{
+			//		if (this.LocalPlayerControls[info.LocalId][info.Name].IsPressed != _pressed)
+			//		{
+			//			this._PressKey(info.Name, info.LocalId, _pressed, _once, _local: true);
 
-						if (this.Node.Connected)
-							this.Node.Send(new MekaItem("Key", new MekaItem("Name", info.Name.ToString()), new MekaItem("Pressed", _pressed.ToString()), new MekaItem("ID", this.LocalPlayerIds[info.LocalId].ToString())));
-					}
-				}
-			}
+			//			if (this.Node.Connected)
+			//				this.Node.Send(new MekaItem("Key", new MekaItem("Name", info.Name.ToString()), new MekaItem("Pressed", _pressed.ToString()), new MekaItem("ID", this.LocalPlayerIds[info.LocalId].ToString())));
+			//		}
+			//	}
+			//}
+
+			if (this.LocalPlayerCount == 1 && _pressed)
+				this._PlayerInputs[0] = new Tuple<bool, int>(false, 0);
+
+			//foreach (Analog a in this._GetAnalogs())
+			//{
+			//	for (int i = 0; i < a._Keys.Count; i++)
+			//	{
+			//		if (a._Keys[i] == _key)
+			//			a._KeyValues[i] = _pressed;
+			//	}
+			//}
 		}
 
-		internal void _PressKey(string _key, int _id, bool _pressed, bool _once, bool _local)
+		internal Bunch<Analog> _GetAnalogs()
 		{
-			Sandbox<int, Controls> cs = _local ? this.LocalPlayerControls : this.OnlinePlayerControls;
-
-			if (!_once)
+			Bunch<Analog> @out = new Bunch<Analog>();
+			foreach (KeyValuePair<int, Dictionary<string, Analog>> c in this._Controls)
 			{
-				if (_pressed)
-					cs[_id]._Press(_key);
-				else
-					cs[_id].Release(_key);
+				foreach (KeyValuePair<string, Analog> a in c.Value)
+					@out.Add(a.Value);
 			}
-			else
-				cs[_id].PressOnce(_key);
+			foreach (KeyValuePair<int, Dictionary<string, Analog>> c in this._GamePadControlsInstances)
+			{
+				foreach (KeyValuePair<string, Analog> a in c.Value)
+					@out.Add(a.Value);
+			}
+			return @out;
 		}
+
+		//internal void _PressKey(string _key, int _id, bool _pressed, bool _once, bool _local)
+		//{
+		//	Sandbox<int, Controls> cs = _local ? this.LocalPlayerControls : this.OnlinePlayerControls;
+
+		//	if (!_once)
+		//	{
+		//		if (_pressed)
+		//			cs[_id]._Press(_key);
+		//		else
+		//			cs[_id].Release(_key);
+		//	}
+		//	else
+		//		cs[_id].PressOnce(_key);
+		//}
 
 		public void PressKey(Key _key) => this._HandleKeyPress(_key, true);
 		public void ReleaseKey(Key _key) => this._HandleKeyPress(_key, false);
@@ -1610,7 +1795,6 @@ namespace Mekanik
 		public static Func<Color[,], byte[]> GifUnuglify = cs => { throw new Exception("yo cant do dat"); };
 		public static Func<Bunch<byte[]>, byte[]> GifEncode = fs => { throw new Exception("yo cant do dat"); };
 		public static Func<ImageSource, byte[]> ImageToBytes = img => { throw new Exception("yo cant do dat"); };
-		public static Func<ImageSource, byte[]> ImageToBytesRgb = img => { throw new Exception("yo cant do dat"); };
 
 		#endregion
 
@@ -1639,12 +1823,19 @@ namespace Mekanik
 			this._CurrentSaveFile._Id = id;
 		}
 
-		public void LoadSaveFile(SaveFile f) => this._CurrentSaveFile = f;
+		public void LoadSaveFile(SaveFile _savefile) => this._CurrentSaveFile = _savefile;
+
+		public void UnloadSaveFile() => this._CurrentSaveFile = null;
 
 		public void SaveSaveFile()
 		{
 			if (this.CurrentSaveFile != null)
 				this.CurrentSaveFile._Save();
+		}
+
+		public void DeleteSaveFile(SaveFile _savefile)
+		{
+			_savefile._Delete();
 		}
 
 		#endregion

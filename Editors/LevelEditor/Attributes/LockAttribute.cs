@@ -10,7 +10,6 @@ namespace Mekanik
 	public class LockAttribute : Attribute
 	{
 		public Vector Pos;
-		public LockAttribute(Vector _pos) { this.Pos = _pos; }
 		public LockAttribute(double _x, double _y) { this.Pos = new Vector(_x, _y); }
 	}
 }

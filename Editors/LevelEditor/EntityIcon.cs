@@ -19,7 +19,6 @@ namespace Mekanik
 		public bool Selected;
 		public bool StartedDragging;
 		public int EntityZ;
-		//public bool Loaded;
 		public VertexArray TestButton;
 		public MouseArea TestArea;
 		public MekaItem LoadInfo;
@@ -38,11 +37,10 @@ namespace Mekanik
 			{
 				Vector topleft = this.Position - this.Icon.Size * this.Type.Origin;
 				Vector botright = this.Position + this.Icon.Size * (1 - this.Type.Origin);
-				Vector size = this.TileEditor.Size * this.Parent.Tilesize;
+				Vector size = this.TileEditor.Size * this.Parent.TileSize;
 
 				return !(botright.X < 0 || botright.Y < 0 || topleft.X > size.X || topleft.Y > size.Y);
 			}
-			//get { return (new Rect(0, this.TileEditor.Size * this.Parent.Tilesize)).ContainsE(this.Position); }
 		}
 
 		public EntityIcon(Layer _layer, EntityType _type, bool _dragged)
@@ -67,12 +65,20 @@ namespace Mekanik
 				if (this.Properties.Any(item => item.Name == property.Name))
 					this.Properties.First(item => item.Name == property.Name).Value = property.Content;
 			}
-
-			//this.Loaded = true;
 		}
 
 		public override void OnInitialization()
 		{
+			if (this.LoadInfo == null)
+			{
+				this.EntityZ = (this.Type.Name == "Decoration") ? -1 : 0;
+
+				if (this.Type.Name != "Decoration")
+					this.Properties.First(item => item.Name == "Identifier").Value = this.Type.Name + this.Parents[0].Children.GetTypes<EntityIcon>().Count(item => item.Type.Name == this.Type.Name).ToString();
+			}
+			else
+				this.LoadFromItem(this.LoadInfo);
+
 			ImageSource src = this.Type.Name == "Decoration" ? this.Parent.Areasets.First(item => item.Value.Name == this.Properties.First(prop => prop.Name == "Areaset").Value).Value.Decorations[this.Properties.First(item => item.Name == "Name").Value] : this.Type.Icon;
 
 			Image img0 = (new Image(src) { Origin = this.Type.Origin }).Extend();
@@ -106,17 +112,6 @@ namespace Mekanik
 				} });
 
 			this._IsDragged = this.Dragged;
-			//this.Area._ClickedKey = Key.MouseLeft;
-
-			if (this.LoadInfo == null)
-			{
-				this.EntityZ = (this.Type.Name == "Decoration") ? -1 : 0;
-
-				if (this.Type.Name != "Decoration")
-					this.Properties.First(item => item.Name == "Identifier").Value = this.Type.Name + this.Parents[0].Children.GetTypes<EntityIcon>().Count(item => item.Type.Name == this.Type.Name).ToString();
-			}
-			else
-				this.LoadFromItem(this.LoadInfo);
 		}
 
 		public override void Update()
@@ -171,13 +166,12 @@ namespace Mekanik
 			{
 				if (this.Type.Lock.HasValue == !Parent.IsKeyPressed(Key.LControl))
 				{
-					Vector l = (this.Type.Lock.HasValue ? this.Type.Lock.Value : (Vector)this.Parent.Tilesize);
-					Point t = new Point(Meth.Round(_position.X / Parent.Tilesize.X - l.X), Meth.Round(_position.Y / Parent.Tilesize.Y - l.Y));
-					this.Position = (t + l) * Parent.Tilesize;
+					Vector l = (this.Type.Lock.HasValue ? this.Type.Lock.Value : (Vector)this.Parent.TileSize);
+					Point t = new Point(Meth.Round(_position.X / Parent.TileSize.X - l.X), Meth.Round(_position.Y / Parent.TileSize.Y - l.Y));
+					this.Position = (t + l) * Parent.TileSize;
 				}
 				else
 					this.Position = (Point)_position;
-				//this.Position = _position;
 
 				this.Layer.EntitiesChanged = true;
 			}
@@ -210,7 +204,6 @@ namespace Mekanik
 			@out.Children.Add(new MekaItem("X", this.Position.X.ToString()));
 			@out.Children.Add(new MekaItem("Y", this.Position.Y.ToString()));
 			@out.Children.Add(new MekaItem("Z", this.EntityZ.ToString()));
-			//@out.Children.Add(new MekaItem("Settings", new List<MekaItem>() { new MekaItem("Position", this.Position.ToString()), new MekaItem("Z", this.EntityZ.ToString()) }));
 			@out.Children.Add(new MekaItem("Properties", this.Properties.Select(item => new MekaItem(item.Name, item.Value)).ToList()));
 			return @out;
 		}

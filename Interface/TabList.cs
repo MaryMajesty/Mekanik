@@ -195,6 +195,8 @@ namespace Mekanik
 			this.Children.Add(this.Group = g);
 		}
 
+		public void SelectTab(int _tab) => this.SelectTab(this.Children.GetTypes<Tab>()[_tab]);
+
 		public bool IsSelected(Tab _tab) { return this.Children.GetTypes<Tab>().IndexOf(_tab) == this.CurTab; }
 	}
 

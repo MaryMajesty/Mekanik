@@ -75,7 +75,7 @@ namespace Mekanik
 						n += _symbolspace.Value;
 					else if (this.Chars.ContainsKey(c))
 						n += c;
-					else if (this._DefaultChar.HasValue)
+					else if (c != ' ' && this._DefaultChar.HasValue)
 						n += this._DefaultChar;
 					else
 						n += " ";
@@ -94,7 +94,7 @@ namespace Mekanik
 				this._Renderer = new Renderer(size);
 			else if (this._Renderer.Resolution != size)
 				this._Renderer.Resolution = size;
-
+			
 			this._Renderer.Clear();
 
 			Bunch<string> lines = this._SplitText(_content, _tablength, _symboltab, _symbolspace);
@@ -102,7 +102,10 @@ namespace Mekanik
 			for (int y = 0; y < lines.Count; y++)
 			{
 				for (int x = 0; x < lines[y].Length; x++)
-					this._Renderer.Draw(new Image(this.Chars[lines[y][x]]) { Position = new Vector(x, y) * this.CharSize, Color = _color });
+				{
+					if (lines[y][x] != ' ')
+						this._Renderer.Draw(new Image(this.Chars[lines[y][x]]) { Position = new Vector(x, y) * this.CharSize, Color = _color, BlendMode = BlendMode.None });
+				}
 			}
 
 			return this._Renderer.ImageSource.Clone();

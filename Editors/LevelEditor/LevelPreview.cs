@@ -29,7 +29,6 @@ namespace Mekanik
 		public Rect FitRect
 		{
 			get { return this._FitRect; }
-			//get { return (new Rect(0, this.Size - 8)).MakeFit(this.Editor.TileEditor.Layer.Preview.Size); }
 		}
 		public Vector FitPosition
 		{
@@ -37,7 +36,7 @@ namespace Mekanik
 		}
 		public Vector FitScale
 		{
-			get { return this.FitRect.Size / (this.Editor.TileEditor.Layer.Size * this.Parent.Tilesize); }
+			get { return this.FitRect.Size / (this.Editor.TileEditor.Layer.Size * this.Parent.TileSize); }
 		}
 
 		public LevelPreview(LevelEditor _editor)
@@ -66,9 +65,9 @@ namespace Mekanik
 					OnClick = key =>
 						{
 							if (key == Key.MouseDown)
-								this.Zoom(0.5, this.LocalMousePosition / this.Size * this.Editor.TileEditor.Size * this.Parent.Tilesize);
+								this.Zoom(0.5, this.LocalMousePosition / this.Size * this.Editor.TileEditor.Size * this.Parent.TileSize);
 							if (key == Key.MouseUp)
-								this.Zoom(2, this.LocalMousePosition / this.Size * this.Editor.TileEditor.Size * this.Parent.Tilesize);
+								this.Zoom(2, this.LocalMousePosition / this.Size * this.Editor.TileEditor.Size * this.Parent.TileSize);
 						}
 				});
 
@@ -88,20 +87,16 @@ namespace Mekanik
 			this.Editor.TileEditor.Scale = s;
 			this.Editor.TileEditor.Position = this.Editor.TabListLeft.TotalSize.OnlyX + (this.Editor.TileEditor.Position - this.Editor.TabListLeft.TotalSize.OnlyX) * (s / os);
 			this.Editor.TileEditor.Position += this.Editor.EditorSize * ((os.X < s.X) ? (os / s) : (s / os) / 2) * Meth.Sign(os.X - s.X);
-
-			//Rect r = new Rect(0, this.Editor.TileEditor.Size * this.Parent.Tilesize * os);
-			//Rect n = r.Zoom(_position, (s / os).X);
-			//this.Editor.TileEditor.Position += n.Position;
 		}
 
 		public void UpdateSize()
 		{
-			this._FitRect = (new Rect(0, this.Size - 8)).MakeFit(this.Editor.TileEditor.Layer.Size * this.Editor.Parent.Tilesize);
+			this._FitRect = (new Rect(0, this.Size - 8)).MakeFit(this.Editor.TileEditor.Layer.Size * this.Editor.Parent.TileSize);
 		}
 
 		public override void Update()
 		{
-			Vector size = this.Editor.TileEditor.Size * this.Parent.Tilesize * this.Editor.TileEditor.Scale;
+			Vector size = this.Editor.TileEditor.Size * this.Parent.TileSize * this.Editor.TileEditor.Scale;
 			Vector esize = this.Editor.EditorSize;
 
 			if (this.MouseArea.IsClicked)
@@ -119,20 +114,13 @@ namespace Mekanik
 			{
 				this.NeedsUpdate = false;
 				this.UpdateTimer = 10;
-				//Thread t = new Thread(this.UpdatePreview);
-				//t.Start();
 			}
 
 			if (this.UpdateTimer > 0)
 			{
 				this.UpdateTimer--;
 				if (this.UpdateTimer == 0)
-				{
 					this.UpdatePreview();
-					//this.Parent.IndicationText = "Started!";
-					//Thread t = new Thread(this.UpdatePreview);
-					//t.Start();
-				}
 			}
 
 			if (this.Updated)
@@ -147,8 +135,8 @@ namespace Mekanik
 				this.Frame.Add(this.FitPosition, this.FitPosition + this.FitRect.Size.OnlyX, this.FitPosition + this.FitRect.Size, this.FitPosition + this.FitRect.Size.OnlyY, this.FitPosition);
 			}
 			
-			Vector topleft = this.FitRect.Size * ((this.Editor.TileEditor.Position - new Vector(this.Editor.TabListLeft.TotalSize.X, 20)) / this.Editor.TileEditor.Scale / this.Parent.Tilesize / -this.Editor.TileEditor.Size);
-			Vector botright = topleft + this.FitRect.Size * this.Editor.EditorSize / this.Editor.TileEditor.Scale / this.Parent.Tilesize / this.Editor.TileEditor.Size;
+			Vector topleft = this.FitRect.Size * ((this.Editor.TileEditor.Position - new Vector(this.Editor.TabListLeft.TotalSize.X, 20)) / this.Editor.TileEditor.Scale / this.Parent.TileSize / -this.Editor.TileEditor.Size);
+			Vector botright = topleft + this.FitRect.Size * this.Editor.EditorSize / this.Editor.TileEditor.Scale / this.Parent.TileSize / this.Editor.TileEditor.Size;
 
 			topleft.X = Meth.Max(topleft.X, 0);
 			topleft.Y = Meth.Max(topleft.Y, 0);
@@ -163,7 +151,7 @@ namespace Mekanik
 		{
 			this.UpdateSize();
 
-			Point size = this.Editor.TileEditor.Layer.Size * this.Editor.Parent.Tilesize;
+			Point size = this.Editor.TileEditor.Layer.Size * this.Editor.Parent.TileSize;
 
 			Renderer c = new Renderer(size);
 

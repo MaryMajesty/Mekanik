@@ -14,7 +14,6 @@ namespace Mekanik
 		public int CurLayer;
 		public Layer MainLayer;
 		public Dictionary<string, Areaset> Areasets;
-		//public PhotoCanvas Canvas;
 		public Image Grid;
 		public Image OnionSkinBelow;
 		public Image OnionSkinAbove;
@@ -22,12 +21,9 @@ namespace Mekanik
 		public MouseArea MouseArea;
 		public Point DrawStart;
 		public Tuple<string, int> CurTile;
-		//public int BackgroundTile;
 		public bool Enabled = true;
 		public Tuple<string, int> DefaultTile;
 		public VertexArray Frame;
-		public Vector DragStart;
-		public Vector DragPosition;
 		
 		public Layer Layer
 		{
@@ -73,13 +69,12 @@ namespace Mekanik
 		public void UpdateFrame()
 		{
 			this.Frame.Vertices.Clear();
-			//this.Frame.Add(-0.5, (this.Size * this.Parent.Tilesize).OnlyX + new Vector(0, -0.5), this.Size * this.Parent.Tilesize, (this.Size * this.Parent.Tilesize).OnlyY + new Vector(-0.5), -0.5);
-			this.Frame.Add(0, (this.Size * this.Parent.Tilesize).OnlyX, this.Size * this.Parent.Tilesize, (this.Size * this.Parent.Tilesize).OnlyY, 0);
+			this.Frame.Add(0, (this.Size * this.Parent.TileSize).OnlyX, this.Size * this.Parent.TileSize, (this.Size * this.Parent.TileSize).OnlyY, 0);
 		}
 
 		public void AddLayer(int _pos)
 		{
-			Layer l = new Layer(this.Areasets, this.Parent.Tilesize, this.DefaultTile) { Size = this.Size };
+			Layer l = new Layer(this.Areasets, this.Parent.TileSize, this.DefaultTile) { Size = this.Size };
 			this.Layers = this.Layers.SubBunch(0, _pos) + l + this.Layers.SubBunch(_pos);
 			this.CurLayer = _pos;
 		}
@@ -104,7 +99,7 @@ namespace Mekanik
 			{
 				if (this.CurLayer + i >= 0 && this.CurLayer + i < this.Layers.Count)
 				{
-					Renderer c = new Renderer(this.Size * this.Parent.Tilesize);
+					Renderer c = new Renderer(this.Size * this.Parent.TileSize);
 					c.Draw(new Image(this.Layers[this.CurLayer + i].Previews[0]));
 					c.Draw(new Image(this.Layers[this.CurLayer + i].Previews[1]));
 					
@@ -112,8 +107,6 @@ namespace Mekanik
 				}
 				else
 					(new Bunch<Image>(this.OnionSkinBelow, this.OnionSkinAbove))[(i == -1) ? 0 : 1].Source = new ImageSource(1, 1);
-				//this.OnionSkinBelow.Source = (this.CurLayer == 0) ? new ImageSource(1, 1) : this.Layers[this.CurLayer - 1].Preview;
-				//this.OnionSkinAbove.Source = (this.CurLayer == this.Layers.Count - 1) ? new ImageSource(1, 1) : this.Layers[this.CurLayer + 1].Preview;
 			}
 		}
 
@@ -121,7 +114,7 @@ namespace Mekanik
 		{
 			this.Size = this.Editor.LevelSize;
 
-			this.AddMouseArea(this.MouseArea = new MouseArea(new Rectangle(0, this.Size * this.Parent.Tilesize))
+			this.AddMouseArea(this.MouseArea = new MouseArea(new Rectangle(0, this.Size * this.Parent.TileSize))
 				{
 					ClickableBy = new Bunch<Key>(Key.MouseLeft, Key.MouseRight, Key.MouseMiddle, Key.MouseDown, Key.MouseUp),
 					Draggable = true,
@@ -133,16 +126,8 @@ namespace Mekanik
 								if (key == Key.MouseLeft || key == Key.MouseRight)
 								{
 									if (this.Enabled)
-										DrawStart = this.LocalMousePosition / this.Parent.Tilesize;
+										DrawStart = this.LocalMousePosition / this.Parent.TileSize;
 								}
-								else if (key == Key.MouseMiddle)
-								{
-									this.DragStart = this.Parent.MousePosition;
-									this.DragPosition = this.Position;
-
-									//this.CurTile = this.Layer[Meth.Down(this.LocalMousePosition.X / this.Parent.Tilesize.X), Meth.Down(this.LocalMousePosition.Y / this.Parent.Tilesize.Y)];
-								}
-									//this.CurTile = new Tuple<string, int>(this.CurTile.Item1, (int)Meth.Limit(0, this.CurTile.Item2 + ((key == Key.MouseDown) ? 1 : -1), this.Areasets[this.CurTile.Item1].Tiles.LastIndex));
 							}
 							else if (key == Key.MouseLeft)
 								Editor.EntityEditor.Select(null);
@@ -158,23 +143,16 @@ namespace Mekanik
 
 		public override void Update()
 		{
-			//if (this.MouseArea.Shape.Position != -this.Position || ((Rectangle)this.MouseArea.Shape).Size != this.Editor.EditorSize)
-			//	this.MouseArea.Shape = new Rectangle(-this.Position, this.Editor.EditorSize);
-
 			if ((this.MouseArea.ClickedBy(Key.MouseLeft) || this.MouseArea.ClickedBy(Key.MouseRight)) && Editor.TabListRight.CurName == "Tiles")
 			{
-				Point c = this.LocalMousePosition / this.Parent.Tilesize;
+				Point c = this.LocalMousePosition / this.Parent.TileSize;
 				foreach (Point p in Line.Trace(this.DrawStart, c))
-					//this.Draw(p, this.MouseArea.ClickedBy(Key.MouseLeft) ? this.CurTile : this.BackgroundTile);
 					this.Layer[p.X, p.Y] = this.MouseArea.ClickedBy(Key.MouseLeft) ? this.CurTile : this.DefaultTile;
 				this.DrawStart = c;
 
 				this.Editor.LevelPreview.NeedsUpdate = true;
 			}
-
-			//if (this.MouseArea.ClickedBy(Key.MouseMiddle))
-			//	this.Position = this.DragPosition + this.Parent.MousePosition - this.DragStart;
-
+			
 			if (this.Layer.SizeChangedEditor)
 			{
 				this.Layer.SizeChangedEditor = false;
@@ -182,38 +160,11 @@ namespace Mekanik
 				this.Backgrounds[1].Source = this.Layer.Previews[1];
 				this.Grid.Source = new ImageSource(this.Backgrounds[0].Source.Size);
 
-				this.MouseArea.Shape = new Rectangle(0, this.Layer.Size * this.Parent.Tilesize);
+				this.MouseArea.Shape = new Rectangle(0, this.Layer.Size * this.Parent.TileSize);
 			}
-
-			//this.Position = new Vector(0, 20);
-
+			
 			this.OnionSkinBelow.Visible = this.OnionSkinAbove.Visible = this.Editor.OnionSkin;
 		}
-
-		//public void Draw(Point _position, int _tile)
-		//{
-		//	if ((new Rect(0, this.Size)).Contains(_position))
-		//	{
-		//		this.Map[_position.X, _position.Y] = _tile;
-		//		this.Canvas.Draw(new Image(this.Tiles[_tile]) { Position = _position * this.TileSize });
-		//		this.ChangesMade = true;	
-		//	}
-		//}
-
-		//public ImageSource Export()
-		//{
-		//	ImageSource @out = new ImageSource(this.Size.X, this.Size.Y);
-		//	for (int x = 0; x < this.Size.X; x++)
-		//	{
-		//		for (int y = 0; y < this.Size.Y; y++)
-		//		{
-		//			byte[] bs = Beth.ToEndian(this.Layer[x, y], 4);
-		//			bs[3] = 255;
-		//			@out[x, y] = new Color(bs);
-		//		}
-		//	}
-		//	return @out;
-		//}
 
 		internal void _Load(byte[] _bytes)
 		{
@@ -228,7 +179,7 @@ namespace Mekanik
 
 			foreach (MekaItem layer in level["Layers"].Children)
 			{
-				Layer l = new Layer(this.Areasets, this.Parent.Tilesize, this.DefaultTile) { SizeChangedLayer = true };
+				Layer l = new Layer(this.Areasets, this.Parent.TileSize, this.DefaultTile) { SizeChangedLayer = true };
 				l.LoadFromImage(GameBase.LoadImageSource(layer["Tiles"].Data), areasets);
 
 				foreach (MekaItem entity in layer["Entities"].Children)

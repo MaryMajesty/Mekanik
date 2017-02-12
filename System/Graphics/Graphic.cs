@@ -10,6 +10,7 @@ namespace Mekanik
 	{
 		public bool LockToGrid;
 		public Vector Position;
+		public Vector Offset;
 		public Vector Scale = 1;
 		public double Rotation;
 		public double Z;
@@ -21,6 +22,7 @@ namespace Mekanik
 		public int? Renderer;
 		
 		internal Vector _OriginalPosition;
+		internal Vector _OriginalOffset;
 		internal Vector _OriginalScale;
 		internal double _OriginalRotation;
 		internal double _OriginalZ;
@@ -34,17 +36,18 @@ namespace Mekanik
 		{
 			get { return this._Disposed; }
 		}
-
-		//protected internal abstract void Draw(RenderTarget _target);
-
+		
 		internal void _Set(Entity _entity)
 		{
 			this._OriginalPosition = this.Position;
+			this._OriginalOffset = this.Offset;
 			this._OriginalRotation = this.Rotation;
 			this._OriginalScale = this.Scale;
 			this._OriginalZ = this.Z;
 			this._OriginalColor = this.Color;
 			this._OriginalRenderer = this.Renderer;
+
+			this.Position += this.Offset;
 
 			this._Parent = _entity;
 		}
@@ -52,6 +55,7 @@ namespace Mekanik
 		internal void _Reset()
 		{
 			this.Position = this._OriginalPosition;
+			this.Offset = this._OriginalOffset;
 			this.Rotation = this._OriginalRotation;
 			this.Scale = this._OriginalScale;
 			this.Z = this._OriginalZ;

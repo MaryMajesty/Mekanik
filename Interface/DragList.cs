@@ -193,7 +193,7 @@ namespace Mekanik
 				middles.Add(double.MaxValue);
 			}
 
-			if (this.LocalMousePosition.X >= 0 && this.LocalMousePosition.X < this.Width && this.LocalMousePosition.Y >= 0 && this.LocalMousePosition.Y < pos.Last + lheight + this.Spacing)
+			if (this.LocalMousePosition.X >= 0 && this.LocalMousePosition.X < this.Width && this.LocalMousePosition.Y >= 0 && this.LocalMousePosition.Y < pos.Last + lheight + this.Spacing && !this.Items.Any(item => item._BeingDragged))
 			{
 				this._MousePos = threshes.IndexOf((this.Spacing / 2 + threshes).Last(t => t < middles.First(m => m > this.LocalMousePosition.Y))) + 1;
 				Vector v = new Vector(this.Width / 2, (this.Spacing / 2 + threshes)[this._MousePos]);

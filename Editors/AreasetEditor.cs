@@ -83,7 +83,7 @@ namespace Mekanik
 			set
 			{
 				this._TilesetSource = value;
-				this.TileCount = this._TilesetSource.Size / this.Parent.Tilesize;
+				this.TileCount = this._TilesetSource.Size / this.Parent.TileSize;
 				
 				this.Graphics.Remove(this.Tileset);
 				this.Graphics.Add(this.Tileset = new Image(this.TilesetSource) { Position = new Vector(this.AlignmentZoom.RectSize.X, 0), Color = Color.White ^ 170 });
@@ -97,7 +97,7 @@ namespace Mekanik
 
 				this.ColPreviewSource = new ImageSource(this.TileCount * this.Parent.TileCollisionResolution);
 				this.Graphics.Remove(this.ColPreview);
-				this.Graphics.Add(this.ColPreview = new Image(this.ColPreviewSource) { Position = new Vector(this.AlignmentZoom.RectSize.X, 0), Scale = this.Parent.Tilesize / this.Parent.TileCollisionResolution });
+				this.Graphics.Add(this.ColPreview = new Image(this.ColPreviewSource) { Position = new Vector(this.AlignmentZoom.RectSize.X, 0), Scale = this.Parent.TileSize / this.Parent.TileCollisionResolution });
 
 				this.Zoom = (this._TilesetSource.Height < 200) ? 2 : 1;
 				this.UpdateZoom(0);
@@ -120,7 +120,7 @@ namespace Mekanik
 		{
 			this.AddMouseArea(this.MouseArea = new MouseArea(new Rectangle(0, 1)) { ClickableBy = new Bunch<Key>(Key.MouseLeft, Key.MouseRight), OnClick = key =>
 				{
-					this.LastPosition = (this.LocalMousePosition - new Vector(this.AlignmentZoom.RectSize.X, 0)) / (this.Parent.Tilesize / this.Parent.TileCollisionResolution) / this.Zoom;
+					this.LastPosition = (this.LocalMousePosition - new Vector(this.AlignmentZoom.RectSize.X, 0)) / (this.Parent.TileSize / this.Parent.TileCollisionResolution) / this.Zoom;
 				} });
 			
 			this.Children.Add(this.AlignmentZoom = new Alignment(new Button("+", () => this.UpdateZoom(1)), new Button("-", () => this.UpdateZoom(-1))) { Vertical = true });
@@ -132,7 +132,7 @@ namespace Mekanik
 			this.Zoom = Meth.Limit(1, this.Zoom + _offset, 4);
 
 			this.Tileset.Scale = this.Zoom;
-			this.ColPreview.Scale = (this.Parent.Tilesize / this.Parent.TileCollisionResolution) * this.Zoom;
+			this.ColPreview.Scale = (this.Parent.TileSize / this.Parent.TileCollisionResolution) * this.Zoom;
 
 			this.UpdateMouseArea();
 		}
@@ -150,7 +150,7 @@ namespace Mekanik
 			{
 				bool key = this.MouseArea.ClickedBy(Key.MouseLeft);
 				
-				Point m = (this.LocalMousePosition - new Vector(this.AlignmentZoom.RectSize.X, 0)) / (this.Parent.Tilesize / this.Parent.TileCollisionResolution) / this.Zoom;
+				Point m = (this.LocalMousePosition - new Vector(this.AlignmentZoom.RectSize.X, 0)) / (this.Parent.TileSize / this.Parent.TileCollisionResolution) / this.Zoom;
 				foreach (Point p in Line.Trace(this.LastPosition, m).Where(item => (new Rect(0, this.TileCount * this.Parent.TileCollisionResolution)).Contains(item)))
 				{
 					Point tile = p / this.Parent.TileCollisionResolution;
@@ -174,7 +174,7 @@ namespace Mekanik
 
 		public ImageSource GetColset()
 		{
-			int pixelcount = Meth.Up(this.Parent.TileCollisionResolution.X * this.Parent.TileCollisionResolution.Y / 4);
+			int pixelcount = Meth.Up(this.Parent.TileCollisionResolution.X * this.Parent.TileCollisionResolution.Y / 4.0);
 			ImageSource @out = new ImageSource(this.TileCount.X * pixelcount, this.TileCount.Y);
 			for (int x = 0; x < this.TileCount.X; x++)
 			{
@@ -204,7 +204,7 @@ namespace Mekanik
 		public MekaItem Export()
 		{
 			MekaItem @out = new MekaItem("Areaset", new List<MekaItem>());
-			@out.Children.Add(new MekaItem("Info", new List<MekaItem>() { new MekaItem("Tilesize", this.Parent.Tilesize.ToString()), new MekaItem("Colsize", this.Parent.TileCollisionResolution.ToString()) }));
+			@out.Children.Add(new MekaItem("Info", new List<MekaItem>() { new MekaItem("Tilesize", this.Parent.TileSize.ToString()), new MekaItem("Colsize", this.Parent.TileCollisionResolution.ToString()) }));
 			@out.Children.Add(new MekaItem("Tileset", this.TilesetSource.Bytes));
 			@out.Children.Add(new MekaItem("Colset", this.GetColset().Bytes));
 			return @out;
@@ -220,7 +220,7 @@ namespace Mekanik
 
 		public void Load(MekaItem _file)
 		{
-			Areaset a = new Areaset(_file, this.Parent.Tilesize, this.Parent.TileCollisionResolution);
+			Areaset a = new Areaset(_file, this.Parent.TileSize, this.Parent.TileCollisionResolution);
 
 			this.TilesetSource = GameBase.LoadImageSource(_file["Tileset"].Data);
 			this.Colset = new byte[this.TileCount.X * this.Parent.TileCollisionResolution.X, this.TileCount.Y * this.Parent.TileCollisionResolution.Y][,];
