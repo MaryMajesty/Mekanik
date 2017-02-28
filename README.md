@@ -14,3 +14,5 @@ Features:
 * Using FarseerPhysics, you can add colliders to entities to create physics-based interactions. Levels automatically create their own colliders so you can't walk through walls.
 * You can easily add online functionality to your game, as Mekanik comes with built in features for online connecting and data synchronization. By default, the state of each player's controls gets sent automatically, so with very little code you could easily get a rudimentary online mode running.
 * Mekanik also has lots of built in interface entities, such as textboxes, tabs, file menus, buttons, collapsible groups, reorderable lists, and more. There's even an entity for editing any type of data at all.
+
+Documentation is not available yet, so if you're interested in using Mekanik, just send me a message.
